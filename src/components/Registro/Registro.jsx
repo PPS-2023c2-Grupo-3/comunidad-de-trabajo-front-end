@@ -128,7 +128,8 @@ export default function Registro({
               }}
             >
               
-              <Grid container>
+              { activeStep === steps.length - 1 &&
+                <Grid container>
                 <Grid item xs={12}>
                   <FormControlLabel
                     control={
@@ -142,7 +143,7 @@ export default function Registro({
                     label="Acepto los términos y condiciones"
                   />
                 </Grid>
-              </Grid>
+              </Grid>}
             
               <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
                 <Button
@@ -199,7 +200,7 @@ export default function Registro({
 
                 <Button
                   variant="contained"
-                  disabled={!terminos}
+                  disabled={activeStep === steps.length - 1 && !terminos}
                   onClick={
                     activeStep === steps.length - 1 ? handleFinish : handleNext
                   }

@@ -515,18 +515,6 @@ export default function DatosPersonales({
           </Paper>
         </Grid>
       </Grid>
-      <Grid container spacing={1} sx={{ marginY: "4px" }}>
-        <Grid item xs={12}>
-          <FormControlLabel
-            control={<Checkbox />}
-            label="Acepto los términos y condiciones"
-            name="aceptaTerminos"
-            checked={aceptaTerminos}
-            onChange={(e) => setAceptaTerminos(e.target.checked)}
-            required 
-          />
-        </Grid>
-      </Grid>
       </Grid>
     </>
   );

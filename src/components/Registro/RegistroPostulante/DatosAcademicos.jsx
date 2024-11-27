@@ -222,7 +222,7 @@ export default function DatosAcademicos({
           </Paper>
         </Grid>
       </Grid>
-      <Grid container spacing={1} sx={{ marginY: "4px" }}>
+      {/*<Grid container spacing={1} sx={{ marginY: "4px" }}>
         <Grid item xs={12}>
           <FormControlLabel
             control={<Checkbox />}
@@ -232,7 +232,7 @@ export default function DatosAcademicos({
             onChange={(e) => setAceptaTerminos(e.target.checked)}
           />
         </Grid>
-      </Grid>
+      </Grid>*/}
 
     </>
   );

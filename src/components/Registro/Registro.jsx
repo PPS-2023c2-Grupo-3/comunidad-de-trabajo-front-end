@@ -17,6 +17,9 @@ import {
   DialogTitle,
   Slide,
   useMediaQuery,
+  Checkbox,
+  FormControlLabel,
+  Grid,
 } from "@mui/material";
 import PropTypes from "prop-types";
 
@@ -43,6 +46,7 @@ export default function Registro({
   const [open, setOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const isSmallScreen = useMediaQuery("(max-width:600px)");
+  const [terminos, setTerminos] = useState(false);
 
   const handleNext = () => {
     try {
@@ -123,6 +127,23 @@ export default function Registro({
                 mt: 4,
               }}
             >
+              
+              <Grid container>
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={terminos}
+                        onChange={() => setTerminos(!terminos)}
+                        name="terminos"
+                        color="primary"
+                      />
+                    }
+                    label="Acepto los términos y condiciones"
+                  />
+                </Grid>
+              </Grid>
+            
               <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
                 <Button
                   variant="outlined"
@@ -160,6 +181,7 @@ export default function Registro({
                   </DialogActions>
                 </Dialog>
               </Box>
+
               <Box
                 sx={{
                   display: {
@@ -173,8 +195,11 @@ export default function Registro({
                   <Button onClick={handleBack}>Anterior</Button>
                 )}
                 <Toaster richColors />
+                
+
                 <Button
                   variant="contained"
+                  disabled={!terminos}
                   onClick={
                     activeStep === steps.length - 1 ? handleFinish : handleNext
                   }
@@ -186,6 +211,7 @@ export default function Registro({
                   }}
                 >
                   {activeStep === steps.length - 1 ? "Confirmar" : "Siguiente"}
+
                 </Button>
               </Box>
             </Box>

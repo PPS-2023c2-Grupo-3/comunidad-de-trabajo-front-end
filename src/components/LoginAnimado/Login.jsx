@@ -160,14 +160,18 @@ const Login = () => {
               window.location.href = `/registro/empresa/${response.id}`;
           }
         } else{
-          encryptStorage.setItem("datosUsuario", datosUsuario);
-          encryptStorage.setItem("tipoUsuario", tipoUsuario);
-          encryptStorage.setItem("idUsuario", response.id);
-          encryptStorage.setItem("estaLogueado", "true");
-          window.location.href = "/";
-        }
-        ;
+          if(response.aceptoTerminos === false){
+            console.log("no acepto terminos")
+          }
+          else{
+            encryptStorage.setItem("datosUsuario", datosUsuario);
+            encryptStorage.setItem("tipoUsuario", tipoUsuario);
+            encryptStorage.setItem("idUsuario", response.id);
+            encryptStorage.setItem("estaLogueado", "true");
+            window.location.href = "/"
+          }
       }
+    }
       })
       .catch((err) => {
         toast.error(err.message);

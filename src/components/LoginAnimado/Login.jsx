@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Dialog,
   FormControlLabel,
   Grid,
   IconButton,
@@ -22,11 +23,10 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import * as yup from "yup";
 import { Toaster, toast } from "sonner";
-import { signIn, signUp } from "../../services/usuarios_service";
+import { signIn, signUp, aceptarTerminos } from "../../services/usuarios_service";
 import { getPostulanteById } from "../../services/postulantes_service";
 import { getEmpresaByIdUsuario } from "../../services/empresas_service";
 import { EncryptStorage } from 'encrypt-storage';
-
 
 
 
@@ -43,6 +43,7 @@ const Login = () => {
   const [mostrarContraseñaInicio, setMostrarContraseñaInicio] = useState(false);
   const [mostrarContraseñaRegistro, setMostrarContraseñaRegistro] =
     useState(false);
+  const [open, setOpen] = useState(false);
 
   const toggleMostrarContraseñaInicio = () => {
     setMostrarContraseñaInicio(!mostrarContraseñaInicio);
@@ -160,8 +161,12 @@ const Login = () => {
               window.location.href = `/registro/empresa/${response.id}`;
           }
         } else{
+          
           if(response.aceptoTerminos === false){
-            console.log("no acepto terminos")
+            encryptStorage.setItem("datosUsuario", datosUsuario);
+            encryptStorage.setItem("tipoUsuario", tipoUsuario);
+            encryptStorage.setItem("idUsuario", response.id);   
+            setOpen(true);
           }
           else{
             encryptStorage.setItem("datosUsuario", datosUsuario);
@@ -176,6 +181,12 @@ const Login = () => {
       .catch((err) => {
         toast.error(err.message);
       });
+  };
+  const aceptarCondiciones = () => {
+    setOpen(false);
+    aceptarTerminos(encryptStorage.getItem("idUsuario"));
+    encryptStorage.setItem("estaLogueado", "true");
+    window.location.href = "/";
   };
 
   const isValidEmail = (email) => {
@@ -193,6 +204,9 @@ const Login = () => {
       setTipoUsuario(newAlignment);
     }
   };
+
+  
+
 
   return (
     <Box
@@ -673,6 +687,51 @@ const Login = () => {
         </Box>
       </Box>
       <Toaster richColors closeButton />
+      <Dialog open={open} closeButton>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "20px",
+          }}
+        >
+          <Typography
+            variant="h2"
+            fontFamily={"Poppins, sans-serif"}
+            sx={{
+              fontSize: "1.4rem",
+              marginBlockStart: "0.83em",
+              marginBlockEnd: "0.83em",
+              fontWeight: "bold",
+              lineHeight: "1.4",
+            }}
+          >
+            Acepta los términos y condiciones para continuar.
+
+          </Typography>
+          
+        
+          <Button
+            variant="contained"
+            onClick={aceptarCondiciones}
+            sx={{
+              textTransform: "none",
+              padding: "15px 30px",
+              backgroundColor: "#00496d",
+              borderRadius: "25px",
+              margin: "10px 0px",
+              fontSize: "0.8rem",
+              "&:hover": {
+                backgroundColor: "#00759b",
+              },
+            }}
+          >
+            Aceptar
+          </Button>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

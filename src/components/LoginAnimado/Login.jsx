@@ -189,6 +189,11 @@ const Login = () => {
     window.location.href = "/";
   };
 
+  const rechazarCondiciones = () => {
+    setOpen(false);
+    sessionStorage.clear();
+  };
+
   const isValidEmail = (email) => {
     // Esta función verifica si el correo electrónico tiene un formato válido.
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -687,7 +692,7 @@ const Login = () => {
         </Box>
       </Box>
       <Toaster richColors closeButton />
-      <Dialog open={open} closeButton>
+      <Dialog open={open} >
         <Box
           sx={{
             display: "flex",
@@ -712,24 +717,37 @@ const Login = () => {
 
           </Typography>
           
-        
-          <Button
-            variant="contained"
-            onClick={aceptarCondiciones}
-            sx={{
-              textTransform: "none",
-              padding: "15px 30px",
-              backgroundColor: "#00496d",
-              borderRadius: "25px",
-              margin: "10px 0px",
-              fontSize: "0.8rem",
-              "&:hover": {
-                backgroundColor: "#00759b",
-              },
-            }}
-          >
-            Aceptar
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+            <Button 
+              variant="text"
+              onClick={() => rechazarCondiciones()}
+              sx={{
+                color: "#dc3545",
+                textTransform: "none",
+                fontSize: "1rem",
+                "&:hover": {
+                  color: "#dc3545",
+              }}
+            }
+            >
+              Rechazar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={aceptarCondiciones}
+              sx={{
+                backgroundColor: "#00496d",
+                color: "#fff",
+                textTransform: "none",
+                fontSize: "1rem",
+                "&:hover": {
+                  backgroundColor: "#00759b",
+              }}
+            }
+            >
+              Aceptar
+            </Button>
+            </Box>
         </Box>
       </Dialog>
     </Box>

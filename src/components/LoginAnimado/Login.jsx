@@ -27,8 +27,7 @@ import { signIn, signUp, aceptarTerminos } from "../../services/usuarios_service
 import { getPostulanteById } from "../../services/postulantes_service";
 import { getEmpresaByIdUsuario } from "../../services/empresas_service";
 import { EncryptStorage } from 'encrypt-storage';
-
-
+import Terminos from "../Template/Terminos";
 
 
 const Login = () => {
@@ -703,20 +702,17 @@ const Login = () => {
           }}
         >
           <Typography
-            variant="h2"
-            fontFamily={"Poppins, sans-serif"}
+            variant="h6"
             sx={{
-              fontSize: "1.4rem",
-              marginBlockStart: "0.83em",
-              marginBlockEnd: "0.83em",
               fontWeight: "bold",
-              lineHeight: "1.4",
+              margin: "10px 0px",
             }}
+            
+            
           >
             Acepta los términos y condiciones para continuar.
-
           </Typography>
-          
+          <Terminos />
           <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
             <Button 
               variant="text"

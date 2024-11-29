@@ -602,7 +602,7 @@ const Login = () => {
                   lineHeight: "1.4",
                 }}
               >
-                ¡Bienvenido!!!!!!! de nuevo a la bolsa de empleo de la UNAHUR!
+                ¡Bienvenido de nuevo a la bolsa de empleo de la UNAHUR!
               </Typography>
               <Typography
                 variant="body2"

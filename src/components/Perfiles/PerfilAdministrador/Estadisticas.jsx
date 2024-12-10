@@ -31,6 +31,7 @@ import {
   Legend,
 } from "recharts";
 import { getRubrosOfertas } from "../../../services/rubros_ofertas_service";
+import { getStats } from "../../../services/stats_service";
 
 const Estadisticas = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -52,8 +53,15 @@ const Estadisticas = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [rubrosOfertas, setRubrosOfertas] = useState([]);
+  const [stats, setStats] = useState([]);
 
   useEffect(() => {
+    const traerStats = async () => {
+      const response = await getStats();
+      if (response) {
+        setStats(response);
+      }
+    };
     const traerUsuarios = async () => {
       const response = await getUsuarios();
       if (response) {
@@ -119,7 +127,7 @@ const Estadisticas = () => {
     };
 
     
-
+    traerStats();
     traerUsuarios();
     traerEmpresas();
     traerPostulantes();
@@ -150,14 +158,7 @@ const Estadisticas = () => {
   }, [usuarios]);
 
 
-  const porcentajePostulacionesAceptadasAdmin =
-    (postulacionesAceptadasAdmin * 100) / postulaciones;
-  const porcentajePostulacionesRechazadasAdmin =
-    (postulacionesRechazadasAdmin * 100) / postulaciones;
-  const porcentajePostulacionesAceptadasEmpresa =
-    (postulacionesAceptadasEmpresa * 100) / postulacionesAceptadasAdmin;
-  const porcentajePostulacionesRechazadasEmpresa =
-    (postulacionesRechazadasEmpresa * 100) / postulacionesAceptadasAdmin;
+
 
   const filtrarTodoPorFecha = async (e) => {
     e.preventDefault();
@@ -294,19 +295,7 @@ const Estadisticas = () => {
             </Button>
           </Box>
           <Grid container spacing={2}>
-            {/*<Grid item xs={12} md={6}>
-                            <Box>
-                                <Typography variant = "h6">Usuarios registrados</Typography>
-                                <Typography variant = "h4">{usuarios}</Typography>
-                            </Box>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <Box>
-                                <Typography variant = "h6">Empresas registradas</Typography>
-                                <Typography variant = "h4">{empresas}</Typography>
-                            </Box>
-                        </Grid>*/}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={12}>
               <Box
                 sx={{
                   displat: "flex",
@@ -316,11 +305,41 @@ const Estadisticas = () => {
               >
                 <Typography variant="h6">Usuarios registrados</Typography>
                 <ResponsiveContainer width="100%" height={300}>
-                  <PieChart width={400} height={400}>
+                  <PieChart width={700} height={400}>
                     <Pie
                       data={[
-                        { name: "Postulantes", value: postulantes.length },
-                        { name: "Empresas", value: empresas },
+                        { name: "Postulantes", value: stats.postulantes },
+                        { name: "Empresas", value: stats.empresas },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      fill="#8884d8"
+                      label={({ name, percent, value }) =>
+                        `${name} ${(percent * 100).toFixed(0)}% (${value})`
+                      }
+                    >
+                      <Cell fill="#4E79A7" />
+                      <Cell fill="#F28E2C" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <Box>
+                <Typography variant="h6">Usuarios por estado</Typography>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart width={700} height={400}>
+                    <Pie
+                      data={[
+                        { name: "Registro Completo", value: usuarios.length - usuariosSinFormulario.length },
+                        {
+                          name: "Registro Incompleto",
+                          value: usuariosSinFormulario.length,
+                        },
                       ]}
                       dataKey="value"
                       nameKey="name"
@@ -353,12 +372,12 @@ const Estadisticas = () => {
                     <Pie
                       data={[
                         {
-                          name: "Estudiantes UNAHUR",
-                          value: postulantesUNAHUR.length,
+                          name: "UNAHUR",
+                          value: stats.postulantesUnahur,
                         },
                         {
                           name: "Externos",
-                          value: postulantesExternos.length,
+                          value: stats.postulantesExternos,
                         },
                       ]}
                       dataKey="value"
@@ -378,42 +397,13 @@ const Estadisticas = () => {
                 </ResponsiveContainer>
               </Box>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6">Usuarios por estado</Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart width={400} height={400}>
-                    <Pie
-                      data={[
-                        { name: "Completo", value: usuarios.length - usuariosSinFormulario.length },
-                        {
-                          name: "Incompleto",
-                          value: usuariosSinFormulario.length,
-                        },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      fill="#8884d8"
-                      label={({ name, percent, value }) =>
-                        `${name} ${(percent * 100).toFixed(0)}% (${value})`
-                      }
-                    >
-                      <Cell fill="#4E79A7" />
-                      <Cell fill="#F28E2C" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </Grid>
+            
 
 
             <Grid item xs={12} md={6}>
               <Box>
                 <Typography variant="h6">Ofertas creadas</Typography>
-                <Typography variant="h4">{ofertas.length}</Typography>
+                <Typography variant="h4">{stats.ofertas}</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} md={6}>
@@ -444,53 +434,55 @@ const Estadisticas = () => {
             <Grid item xs={12} md={6}>
               <Box>
                 <Typography variant="h6">Postulaciones totales</Typography>
-                <Typography variant="h4">{postulaciones}</Typography>
+                <Typography variant="h4">{stats.postulaciones}</Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6">
-                  Postulaciones aceptadas por administrador
-                </Typography>
-                <Typography variant="h4">
-                  {postulacionesAceptadasAdmin} (
-                  {Math.round(porcentajePostulacionesAceptadasAdmin)}%)
-                </Typography>
+            
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
+                <Typography variant="h6"> Postulaciones </Typography>
+                <PieChart width={800} height={400}>
+                  <Pie
+                    data={[
+                      {
+                        name: "Aceptadas por admin",
+                        value: stats.postulacionesAceptadasPorAdmin,
+                      },
+                      {
+                        name: "Rechazadas por admin",
+                        value: stats.postulacionesRechazadasPorAdmin,
+                      },
+                      {
+                        name: "Pendientes",
+                        value: stats.postulacionesPendientes,
+                      },
+                      {
+                        name: "Rechazadas por empresa",
+                        value: stats.postulacionesRechazadasPorEmpresa,
+                      },
+                      {
+                        name: "Aceptadas por empresas",
+                        value: stats.postulacionesAceptadasPorEmpresas,
+                      },
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label={({ name, percent, value }) =>
+                      `${name} ${(percent * 100).toFixed(0)}% (${value})`
+                    }
+                  >
+                    <Cell fill="#4E79A7" />
+                    <Cell fill="#F28E2C" />
+                    <Cell fill="#59A14F" />
+                    <Cell fill="#AF7AA1" />
+                    <Cell fill="#E15759" />
+                  </Pie>
+                </PieChart>
               </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6">
-                  Postulaciones rechazadas por administrador
-                </Typography>
-                <Typography variant="h4">
-                  {postulacionesRechazadasAdmin} (
-                  {Math.round(porcentajePostulacionesRechazadasAdmin)}%)
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6">
-                  Postulaciones aceptadas por empresas
-                </Typography>
-                <Typography variant="h4">
-                  {postulacionesAceptadasEmpresa} (
-                  {Math.round(porcentajePostulacionesAceptadasEmpresa)}%)
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6">
-                  Postulaciones rechazadas por empresas
-                </Typography>
-                <Typography variant="h4">
-                  {postulacionesRechazadasEmpresa} (
-                  {Math.round(porcentajePostulacionesRechazadasEmpresa)}%)
-                </Typography>
-              </Box>
-            </Grid>
+            
           </Grid>
         </Box>
       </Card>

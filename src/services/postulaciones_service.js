@@ -111,6 +111,33 @@ export async function putPostulacion(idPostulacion, postulacion, token) {
   }
 }
 
+export async function putCvVisto(idPostulacion, token) {
+  try {
+    const response = await axios.put(
+      `${config.apiUrl}/postulaciones/cv-visto/${idPostulacion}?authorization=${token}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  }
+  catch (error) {
+    console.error(error);
+    if (error.response.status === 401) {
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        sessionStorage.clear();
+      }, 3000);
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
+  }
+}
+
+
 // Delete de postulación
 
 export async function deletePostulacion(idPostulacion, token) {

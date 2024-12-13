@@ -20,6 +20,7 @@ import {
   TableContainer,
   IconButton,
   Icon,
+  Tab,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
@@ -216,10 +217,16 @@ const Postulantes = () => {
                   </TableCell>
                   {
                     tipoUsuario === "admin" ? (
+                      <>
                       <TableCell align="center">
                         <Typography variant="h5">Evaluación de la empresa </Typography>
                       </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="h5">Visto por la empresa</Typography>
+                      </TableCell>
+                      </>
                     ) : null
+                      
                     
                   }
                   <TableCell align="center">
@@ -310,6 +317,7 @@ const Postulantes = () => {
                       </Icon>
                     </TableCell>
                     {tipoUsuario === "admin" ? 
+                    <>
                     <TableCell align="center">
                       {
                         postulacion.Estado.nombre_estado === "aceptado" ? (
@@ -332,7 +340,26 @@ const Postulantes = () => {
                           />
                         )
                       }
-                    </TableCell> : null}
+                    </TableCell> 
+                    <TableCell align="center">
+                      {
+                        postulacion.cv_visto ? (
+                          <CheckOutlinedIcon
+                            sx={{
+                              color: "#28a745",
+                            }}
+                          />
+                        ) : (
+                          <CloseOutlinedIcon
+                            sx={{
+                              color: "red",
+                            }}
+                          />
+                        )
+                      }
+                    </TableCell>
+                    </>
+                    : null}
                     <TableCell align="center">
                       <Button
                         variant="contained"
@@ -345,6 +372,7 @@ const Postulantes = () => {
                           },
                         }}
                         href={`/postulante/${postulacion.Postulante?.id}`}
+                        
                       >
                         Ver perfil
                       </Button>

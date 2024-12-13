@@ -157,6 +157,12 @@ const Postulantes = () => {
     }
   };
 
+  const formatoFecha = (fecha) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString();
+  }
+
+
   return (
     <>
       <Header />
@@ -198,7 +204,7 @@ const Postulantes = () => {
                     <Typography variant="h5">DNI</Typography>
                   </TableCell>
                   <TableCell align="center">
-                    <Typography variant="h5">Teléfono</Typography>
+                    <Typography variant="h5">Fecha de Postulación</Typography>
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="h5">CV</Typography>
@@ -241,7 +247,7 @@ const Postulantes = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Typography variant="subtitle1">
-                        {postulacion.Postulante?.telefono}
+                        {formatoFecha(postulacion.createdAt)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">

@@ -111,13 +111,14 @@ export async function putPostulacion(idPostulacion, postulacion, token) {
   }
 }
 
-export async function putCvVisto(idPostulacion, token) {
+export async function putCvVisto(id) {
   try {
     const response = await axios.put(
-      `${config.apiUrl}/postulaciones/cv-visto/${idPostulacion}?authorization=${token}`,
+      `${config.apiUrl}/postulaciones/cv-visto/${id}`,
+      {}, // Cuerpo de la solicitud, que puede ser un objeto vacío si no hay datos que enviar
       {
         headers: {
-          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       }
     );
@@ -125,15 +126,6 @@ export async function putCvVisto(idPostulacion, token) {
   }
   catch (error) {
     console.error(error);
-    if (error.response.status === 401) {
-      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
-      setTimeout(() => {
-        sessionStorage.clear();
-      }, 3000);
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 5000);
-    }
   }
 }
 

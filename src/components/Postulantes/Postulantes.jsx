@@ -42,6 +42,7 @@ import {
 } from "../../services/postulacionesId_service";
 import { getOfertaById } from "../../services/ofertas_service";
 import { EncryptStorage } from "encrypt-storage";
+import { putCvVisto } from "../../services/postulaciones_service";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -158,6 +159,15 @@ const Postulantes = () => {
     }
   };
 
+  const handleCvVisto = async (id) => {
+    try {
+      const response = await putCvVisto(id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
   const formatoFecha = (fecha) => {
     const date = new Date(fecha);
     return date.toLocaleDateString();
@@ -269,6 +279,7 @@ const Postulantes = () => {
                           },
                         }}
                         disabled={!postulacion.Postulante?.cv}
+                        onClick={tipoUsuario === "empresa" ? () => handleCvVisto(postulacion.id) : null}
                       >
                         <PictureAsPdfIcon />
                       </IconButton>
@@ -372,7 +383,7 @@ const Postulantes = () => {
                           },
                         }}
                         href={`/postulante/${postulacion.Postulante?.id}`}
-                        
+                        onClick={tipoUsuario === "empresa" ? () => handleCvVisto(postulacion.id) : null}
                       >
                         Ver perfil
                       </Button>

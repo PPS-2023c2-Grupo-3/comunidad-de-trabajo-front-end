@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import Button from '@mui/material/Button';
+import { postNewsletter } from '../../../services/newsletter_service';
 
 
 
@@ -11,8 +12,12 @@ export default function Newsletter() {
 
 
     const [asunto, setAsunto] = useState('')
+    const [titulo, setTitulo] = useState('hol123')
     const [algo, setAlgo] = useState('')
+    const [preview, setPreview] = useState(false)
+    const [destinatario, setDestinatario] = useState('ambos')
 
+    const destinatarios = ["ambos", "empresas", "postulantes"]
 
     const modules = {
         toolbar: [
@@ -21,6 +26,7 @@ export default function Newsletter() {
           [{ 'color': [] }, { 'background': [] }], // Color de texto y fondo
           [{ 'list': 'ordered' }, { 'list': 'bullet' }], // Listas ordenadas y desordenadas
           ['link', 'image'], // Enlaces e imágenes
+        [{ 'align': ['justify', 'center', 'right', 'left'] }],
           ['clean'], // Botón para limpiar estilos
         ],
       };   
@@ -39,9 +45,6 @@ export default function Newsletter() {
         'image',
       ];
 
-
-
-
     const handleChange = (value) => {
         setAlgo(value)
     }
@@ -50,6 +53,17 @@ export default function Newsletter() {
         console.log(algo)
     }
 
+    const showPreview = () => {
+        setPreview(!preview)
+    }
+
+
+    const enviarNewsletter = async () => {
+
+        const response = await postNewsletter(titulo, destinatario, asunto, algo)
+        console.log(response)
+    }
+    
   return (
     
     <>
@@ -124,11 +138,22 @@ export default function Newsletter() {
                 />
             </Grid>
             <Grid item xs={12}>
-                <Button variant="contained" color="primary" onClick={boton}>
+                <Button variant="contained" color="primary" onClick={enviarNewsletter}>
                     Enviar
                 </Button>
+                <Button variant="contained" color="secondary" onClick={showPreview}>
+                    Previsualizar
+                </Button>
+            </Grid>
+            <Grid item xs={12}>
+                {
+                    preview && (
+                        <div dangerouslySetInnerHTML={{__html: algo}} />
+                    )
+                }
             </Grid>
         </Grid>
     </>
   )
 }
+

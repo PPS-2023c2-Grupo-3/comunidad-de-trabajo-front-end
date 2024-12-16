@@ -1,136 +1,262 @@
-import { Typography, TextField, Grid, Checkbox, Box, Select, MenuItem } from '@mui/material'
-import React, { useState } from 'react'
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import Button from '@mui/material/Button';
-import { postNewsletter } from '../../../services/newsletter_service';
+import {
+  Typography,
+  TextField,
+  Grid,
+  Checkbox,
+  Box,
+  Select,
+  MenuItem,
+  Card,
+  CardHeader,
+  Stack,
+  Slide,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+    TableBody
+} from "@mui/material";
+import React, { useState, forwardRef, useEffect } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import Button from "@mui/material/Button";
+import { postNewsletter, getNewsletters } from "../../../services/newsletter_service";
 import DOMPurify from "dompurify";
 
-
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction="down" ref={ref} {...props} />;
+});
 
 export default function Newsletter() {
+  const [open, setOpen] = useState(false);
 
+  const [asunto, setAsunto] = useState("");
+  const [titulo, setTitulo] = useState("hol123");
+  const [algo, setAlgo] = useState("");
+  const [preview, setPreview] = useState(false);
+  const [destinatario, setDestinatario] = useState("");
+  const [newletters, setNewsletters] = useState([]);
+  const destinatarios = ["empresa", "postulante", "ambos"];
+  const [selectedContent, setSelectedContent] = useState('');
 
-    const [asunto, setAsunto] = useState('')
-    const [titulo, setTitulo] = useState('hol123')
-    const [algo, setAlgo] = useState('')
-    const [preview, setPreview] = useState(false)
-    const [destinatario, setDestinatario] = useState('')
+  const secciones = ["Newsletters", "Crear Newsletter"];
 
-    const destinatarios = ["empresa", "postulante", "ambos"]
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }], // Encabezados
+      ["bold", "italic", "underline", "strike"], // Negrita, Cursiva, Subrayado, Tachado
+      [{ color: [] }, { background: [] }], // Color de texto y fondo
+      [{ list: "ordered" }, { list: "bullet" }], // Listas ordenadas y desordenadas
+      ["link", "image"], // Enlaces e imágenes
+      [{ align: ["justify", "center", "right", "left"] }],
+      ["clean"], // Botón para limpiar estilos
+    ],
+  };
 
-    const modules = {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }], // Encabezados
-          ['bold', 'italic', 'underline', 'strike'], // Negrita, Cursiva, Subrayado, Tachado
-          [{ 'color': [] }, { 'background': [] }], // Color de texto y fondo
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }], // Listas ordenadas y desordenadas
-          ['link', 'image'], // Enlaces e imágenes
-        [{ 'align': ['justify', 'center', 'right', 'left'] }],
-          ['clean'], // Botón para limpiar estilos
-        ],
-      };   
-    
-      const formats = [
-        'header',
-        'bold',
-        'italic',
-        'underline',
-        'strike',
-        'color',
-        'background',
-        'list',
-        'bullet',
-        'link',
-        'image',
-      ];
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "list",
+    "bullet",
+    "link",
+    "image",
+  ];
 
-    const sanitizedHtml = DOMPurify.sanitize(algo)
+  const sanitizedHtml = DOMPurify.sanitize(algo);
 
-    const handleChange = (value) => {
-        setAlgo(value)
-    }
+  useEffect(() => {
+    const fetchData = async () => {
+        const response = await getNewsletters();
+        setNewsletters(response.newsletters);
+    };
+    fetchData();
+    console.log(newletters)
+    }, []);
 
-    const selectDestinatary = (e) => {
-        setDestinatario(e.target.value)
-    }
+  const handleChange = (value) => {
+    setAlgo(value);
+  };
 
-    
-    const showPreview = () => {
-        setPreview(!preview)
-    }
+  const selectDestinatary = (e) => {
+    setDestinatario(e.target.value);
+  };
 
-    const enviarNewsletter = async () => {
+  const showPreview = (content) => {
+    setPreview(content);
+  };
 
-        const response = await postNewsletter(titulo, destinatario, asunto, algo)
-        console.log(response)
-    }
-    
+  const handleOpen = () => {
+    setOpen(!open);
+  };
+
+  const showContent = (content) => {
+    setSelectedContent(content);
+    };
+  const enviarNewsletter = async () => {
+    const response = await postNewsletter(titulo, destinatario, asunto, algo);
+    console.log(response);
+  };
+
   return (
-    
     <>
-        <Typography variant="h4" gutterBottom>
-            Newsletter
-        </Typography>
+      <Card type="section" elevation={8}>
+        <CardHeader
+          title={open ? secciones[1] : secciones[0]}
+          sx={{
+            flexDirection: {
+              xs: "column",
+              sm: "row",
+            },
+          }}
+        />
         
-        <Grid container spacing={2}>
-            <Grid item xs={12}>
-                
-            </Grid>
-           
-                <Grid item xs={12}>
-                    <TextField
-                        select
-                        fullWidth
-                        label="Destinatario"
-                        variant="outlined"
-                        value={destinatario}
-                        onChange={selectDestinatary}
-                    >
-                        {
-                            destinatarios.map((destinatario, index) => (
-                                <MenuItem key={index} value={destinatario}>
-                                    {destinatario}
-                                </MenuItem>
-                            ))
-                        }
-                    </TextField>
-                </Grid>
-            <Grid item xs={12}>
+        <Grid container spacing={2} mt={2} p={2}>
+          {open ? (
+            <>
+              <Grid item xs={12}>
                 <TextField
-                    fullWidth
-                    label="Asunto"
-                    variant="outlined"
-                    value={asunto}
-                    onChange={(e) => setAsunto(e.target.value)}
+                  fullWidth
+                  label="Titulo"
+                  variant="outlined"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
                 />
-            </Grid>
-            <Grid item xs={12}>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Destinatario"
+                  variant="outlined"
+                  value={destinatario}
+                  onChange={selectDestinatary}
+                >
+                  {destinatarios.map((destinatario) => (
+                    <MenuItem key={destinatario} value={destinatario}>
+                      {destinatario}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Asunto"
+                  variant="outlined"
+                  value={asunto}
+                  onChange={(e) => setAsunto(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12}>
                 <ReactQuill
-                    theme="snow"
-                    modules={modules}
-                    formats={formats}
-                    value={algo}
-                    onChange={handleChange}
+                  modules={modules}
+                  formats={formats}
+                  value={algo}
+                  onChange={handleChange}
                 />
-            </Grid>
-            <Grid item xs={12}>
-                <Button variant="contained" color="primary" onClick={enviarNewsletter}>
-                    Enviar
-                </Button>
-                <Button variant="contained" color="secondary" onClick={showPreview}>
-                    Previsualizar
-                </Button>
-            </Grid>
-            <Grid item xs={12}>
-                {
-                    preview && (
-                        <div dangerouslySetInnerHTML={{__html: sanitizedHtml}} />
-                    )
-                }
-            </Grid>
-        </Grid>
-    </>
-  )
-}
+              </Grid>
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                margin: '1rem'
+              }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={enviarNewsletter}
+                  sx={{
+                    margin: '1rem',
 
+                  }}
+                >
+                  Enviar
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={showPreview}
+                  sx={{
+                    margin: '1rem',
+                  }}
+                >
+                  Vista Previa
+                </Button>
+              </Box>
+                {preview && (
+                    <Grid item xs={12}>
+                    
+                    <Typography
+                        variant="body1"
+                        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+                    ></Typography>
+                    </Grid>
+                )}
+            </>
+          ) : (
+            <>
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    margin: '1rem'
+                    }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleOpen}
+                    >
+                        Crear Newsletter
+                    </Button>
+                </Box>
+                <TableContainer>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Titulo</TableCell>
+                                <TableCell>Destinatario</TableCell>
+                                <TableCell>Asunto</TableCell>
+                                <TableCell>Preview</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {newletters.map((newsletter) => (
+                                <TableRow
+                                    key={newsletter._id}
+                                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                                >
+                                    <TableCell component="th" scope="row">
+                                        {newsletter.titulo}
+                                    </TableCell>
+                                    <TableCell>{newsletter.tipo_destinatario}</TableCell>
+                                    <TableCell>{newsletter.asunto}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={() => showContent(newsletter.contenido)}
+                                        >
+                                            Vista Previa
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                {selectedContent && (
+                    <div>
+                        <div dangerouslySetInnerHTML={{ __html: selectedContent }} />
+                    </div>
+                )}
+            </>
+          )}
+        </Grid>
+      </Card>
+    </>
+  );
+}

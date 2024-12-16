@@ -21,3 +21,17 @@ export async function postNewsletter(titulo, tipo_destinatario, asunto, contenid
     console.error(error);
   }
 }
+
+export async function getNewsletters() {
+  try {
+    const response = await axios.get(`${config.apiUrl}/newsletter/`, {
+      headers: {
+        Authorization: `bearer ${sessionStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  }
+  catch (error) {
+    console.error(error);
+  }
+}

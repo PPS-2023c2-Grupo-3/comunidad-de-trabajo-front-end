@@ -4,7 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import Button from '@mui/material/Button';
 import { postNewsletter } from '../../../services/newsletter_service';
-
+import DOMPurify from "dompurify";
 
 
 
@@ -44,6 +44,8 @@ export default function Newsletter() {
         'link',
         'image',
       ];
+
+    const sanitizedHtml = DOMPurify.sanitize(algo)
 
     const handleChange = (value) => {
         setAlgo(value)
@@ -148,7 +150,7 @@ export default function Newsletter() {
             <Grid item xs={12}>
                 {
                     preview && (
-                        <div dangerouslySetInnerHTML={{__html: algo}} />
+                        <div dangerouslySetInnerHTML={{__html: sanitizedHtml}} />
                     )
                 }
             </Grid>

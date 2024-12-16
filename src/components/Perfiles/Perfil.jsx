@@ -29,6 +29,7 @@ import StorageIcon from "@mui/icons-material/Storage";
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CollectionsIcon from "@mui/icons-material/Collections";
+import NewspaperIcon from '@mui/icons-material/Newspaper';
 import WorkIcon from "@mui/icons-material/Work";
 import Header from "../Header/Header";
 import DatosPersonales from "./PerfilPostulante/DatosPersonales";
@@ -49,7 +50,7 @@ import { forwardRef, useEffect, useState } from "react";
 import { postularseBaseConstante } from "../../services/postulaciones_service";
 import { uploadCV } from "../../services/files_service";
 import { Toaster, toast } from "sonner";
-import BaseUNAHUR from "./PerfilAdministrador/BaseUNAHUR";
+import Newsletter from "./PerfilAdministrador/Newsletter";
 import ExperienciaLaboral from "./PerfilPostulante/ExperienciaLaboral";
 import { EncryptStorage } from "encrypt-storage";
 import LockIcon from '@mui/icons-material/Lock';
@@ -172,8 +173,16 @@ const menuOptionsAdmin = [
     text: "Galería",
     renderSection: <Galeria />
   },
- {
+  {
     id:"6",
+    name: "newsletters",
+    Icon: NewspaperIcon,
+    text: "Newsletters",
+    renderSection: <Newsletter />
+  
+  },
+ {
+    id:"7",
     name: "estadisticas",
     Icon: BarChartIcon,
     text: "Estadísticas",

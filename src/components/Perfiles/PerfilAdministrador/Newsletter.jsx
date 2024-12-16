@@ -69,7 +69,8 @@ export default function Newsletter() {
     "image",
   ];
 
-  const sanitizedHtml = DOMPurify.sanitize(algo);
+  const sanitizedPreview = DOMPurify.sanitize(algo);
+  const sanitizedContent = DOMPurify.sanitize(selectedContent);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,7 +212,7 @@ return (
                                     
                                     <Typography
                                             variant="body1"
-                                            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+                                            dangerouslySetInnerHTML={{ __html: sanitizedPreview }}
                                     ></Typography>
                                     </Grid>
                             )}
@@ -283,7 +284,7 @@ return (
                             </TableContainer>
                             {selectedContent && (
                                     <div>
-                                            <div dangerouslySetInnerHTML={{ __html: selectedContent }} />
+                                            <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
                                     </div>
                             )}
                     </>

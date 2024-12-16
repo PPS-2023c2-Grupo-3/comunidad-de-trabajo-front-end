@@ -1,4 +1,4 @@
-import { Typography, TextField, Grid, Checkbox, Box } from '@mui/material'
+import { Typography, TextField, Grid, Checkbox, Box, Select, MenuItem } from '@mui/material'
 import React, { useState } from 'react'
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -15,9 +15,9 @@ export default function Newsletter() {
     const [titulo, setTitulo] = useState('hol123')
     const [algo, setAlgo] = useState('')
     const [preview, setPreview] = useState(false)
-    const [destinatario, setDestinatario] = useState('ambos')
+    const [destinatario, setDestinatario] = useState('')
 
-    const destinatarios = ["ambos", "empresas", "postulantes"]
+    const destinatarios = ["empresa", "postulante", "ambos"]
 
     const modules = {
         toolbar: [
@@ -51,14 +51,14 @@ export default function Newsletter() {
         setAlgo(value)
     }
 
-    const boton = () => {
-        console.log(algo)
+    const selectDestinatary = (e) => {
+        setDestinatario(e.target.value)
     }
 
+    
     const showPreview = () => {
         setPreview(!preview)
     }
-
 
     const enviarNewsletter = async () => {
 
@@ -75,52 +75,27 @@ export default function Newsletter() {
         
         <Grid container spacing={2}>
             <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
-                    Destinatarios
-                </Typography>
+                
             </Grid>
-            <Box sx={{ 
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: "center",
-                justifyContent: "center"
-            }}>
+           
                 <Grid item xs={12}>
-                    <Box sx={{ 
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}>
-                        <Checkbox/>
-                        <Typography variant="body1">
-                            Todos los usuarios
-                        </Typography>
-                    </Box>
-                    <Box sx={{ 
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}>
-                        <Checkbox/>
-                        <Typography variant="body1">
-                            Empresas
-                        </Typography>
-                    </Box>
-                    <Box sx={{ 
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}>
-                        <Checkbox/>
-                        <Typography variant="body1">
-                            Postulantes
-                        </Typography>
-                    </Box>
+                    <TextField
+                        select
+                        fullWidth
+                        label="Destinatario"
+                        variant="outlined"
+                        value={destinatario}
+                        onChange={selectDestinatary}
+                    >
+                        {
+                            destinatarios.map((destinatario, index) => (
+                                <MenuItem key={index} value={destinatario}>
+                                    {destinatario}
+                                </MenuItem>
+                            ))
+                        }
+                    </TextField>
                 </Grid>
-            </Box>
             <Grid item xs={12}>
                 <TextField
                     fullWidth

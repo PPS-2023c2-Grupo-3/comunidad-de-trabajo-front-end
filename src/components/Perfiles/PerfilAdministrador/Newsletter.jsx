@@ -256,11 +256,24 @@ return (
                                                                     <TableCell>{new Date(newsletter.createdAt).toLocaleDateString()}</TableCell>
                                                                     <TableCell>
                                                                             <Button
-                                                                                    variant="contained"
+                                                                                    variant="outlined"
                                                                                     color="secondary"
                                                                                     onClick={() => showContent(newsletter.contenido)}
+                                                                                    sx={{
+                                                                                            margin: '0.5rem',
+                                                                                    }}
                                                                             >
                                                                                     Vista Previa
+                                                                            </Button>
+                                                                            <Button 
+                                                                                    variant="contained"
+                                                                                    color="primary"
+                                                                                    onClick={() => console.log('Enviar')}
+                                                                                    sx={{
+                                                                                            margin: '0.5rem',
+                                                                                    }}
+                                                                            >
+                                                                                    Enviar
                                                                             </Button>
                                                                     </TableCell>
                                                             </TableRow>

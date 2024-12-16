@@ -23,6 +23,7 @@ import "react-quill/dist/quill.snow.css";
 import Button from "@mui/material/Button";
 import { postNewsletter, getNewsletters } from "../../../services/newsletter_service";
 import DOMPurify from "dompurify";
+import { Toaster, toast } from "sonner";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -32,7 +33,7 @@ export default function Newsletter() {
   const [open, setOpen] = useState(false);
 
   const [asunto, setAsunto] = useState("");
-  const [titulo, setTitulo] = useState("hol123");
+  const [titulo, setTitulo] = useState("");
   const [algo, setAlgo] = useState("");
   const [preview, setPreview] = useState(false);
   const [destinatario, setDestinatario] = useState("");
@@ -100,7 +101,14 @@ export default function Newsletter() {
     };
   const enviarNewsletter = async () => {
     const response = await postNewsletter(titulo, destinatario, asunto, algo);
-    console.log(response);
+    if (response) {
+      toast.success("Newsletter enviado correctamente");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      toast.error("Error al enviar el newsletter");
+    }
   };
 
   return (
@@ -187,6 +195,16 @@ export default function Newsletter() {
                 >
                   Vista Previa
                 </Button>
+                <Button 
+                    variant="outlined"
+                    color="error"
+                    onClick={handleOpen}
+                    sx={{
+                        margin: '1rem',
+                    }}
+                >
+                    Cancelar
+                </Button>
               </Box>
                 {preview && (
                     <Grid item xs={12}>
@@ -257,6 +275,7 @@ export default function Newsletter() {
           )}
         </Grid>
       </Card>
+      <Toaster />
     </>
   );
 }

@@ -111,171 +111,173 @@ export default function Newsletter() {
     }
   };
 
-  return (
+return (
     <>
-      <Card type="section" elevation={8}>
-        <CardHeader
-          title={open ? secciones[1] : secciones[0]}
-          sx={{
-            flexDirection: {
-              xs: "column",
-              sm: "row",
-            },
-          }}
-        />
-        
-        <Grid container spacing={2} mt={2} p={2}>
-          {open ? (
-            <>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Titulo"
-                  variant="outlined"
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Destinatario"
-                  variant="outlined"
-                  value={destinatario}
-                  onChange={selectDestinatary}
-                >
-                  {destinatarios.map((destinatario) => (
-                    <MenuItem key={destinatario} value={destinatario}>
-                      {destinatario}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Asunto"
-                  variant="outlined"
-                  value={asunto}
-                  onChange={(e) => setAsunto(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <ReactQuill
-                  modules={modules}
-                  formats={formats}
-                  value={algo}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Box sx={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                margin: '1rem'
-              }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={enviarNewsletter}
-                  sx={{
-                    margin: '1rem',
+        <Card type="section" elevation={8}>
+            <CardHeader
+                title={open ? secciones[1] : secciones[0]}
+                sx={{
+                    flexDirection: {
+                        xs: "column",
+                        sm: "row",
+                    },
+                }}
+            />
+            
+            <Grid container spacing={2} mt={2} p={2}>
+                {open ? (
+                    <>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Titulo"
+                                variant="outlined"
+                                value={titulo}
+                                onChange={(e) => setTitulo(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                select
+                                fullWidth
+                                label="Destinatario"
+                                variant="outlined"
+                                value={destinatario}
+                                onChange={selectDestinatary}
+                            >
+                                {destinatarios.map((destinatario) => (
+                                    <MenuItem key={destinatario} value={destinatario}>
+                                        {destinatario}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Asunto"
+                                variant="outlined"
+                                value={asunto}
+                                onChange={(e) => setAsunto(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <ReactQuill
+                                modules={modules}
+                                formats={formats}
+                                value={algo}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-around',
+                            margin: '1rem'
+                        }}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={enviarNewsletter}
+                                sx={{
+                                    margin: '1rem',
 
-                  }}
-                >
-                  Enviar
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={showPreview}
-                  sx={{
-                    margin: '1rem',
-                  }}
-                >
-                  Vista Previa
-                </Button>
-                <Button 
-                    variant="outlined"
-                    color="error"
-                    onClick={handleOpen}
-                    sx={{
-                        margin: '1rem',
-                    }}
-                >
-                    Cancelar
-                </Button>
-              </Box>
-                {preview && (
-                    <Grid item xs={12}>
-                    
-                    <Typography
-                        variant="body1"
-                        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-                    ></Typography>
-                    </Grid>
-                )}
-            </>
-          ) : (
-            <>
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    margin: '1rem'
-                    }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleOpen}
-                    >
-                        Crear Newsletter
-                    </Button>
-                </Box>
-                <TableContainer>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Titulo</TableCell>
-                                <TableCell>Destinatario</TableCell>
-                                <TableCell>Asunto</TableCell>
-                                <TableCell>Preview</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {newletters.map((newsletter) => (
-                                <TableRow
-                                    key={newsletter._id}
-                                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                                >
-                                    <TableCell component="th" scope="row">
-                                        {newsletter.titulo}
-                                    </TableCell>
-                                    <TableCell>{newsletter.tipo_destinatario}</TableCell>
-                                    <TableCell>{newsletter.asunto}</TableCell>
-                                    <TableCell>
-                                        <Button
+                                }}
+                            >
+                                Enviar
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={showPreview}
+                                sx={{
+                                    margin: '1rem',
+                                }}
+                            >
+                                Vista Previa
+                            </Button>
+                            <Button 
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={handleOpen}
+                                    sx={{
+                                            margin: '1rem',
+                                    }}
+                            >
+                                    Cancelar
+                            </Button>
+                        </Box>
+                            {preview && (
+                                    <Grid item xs={12}>
+                                    
+                                    <Typography
+                                            variant="body1"
+                                            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+                                    ></Typography>
+                                    </Grid>
+                            )}
+                    </>
+                ) : (
+                    <>
+                            <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    margin: '1rem'
+                                    }}>
+                                    <Button
                                             variant="contained"
-                                            color="secondary"
-                                            onClick={() => showContent(newsletter.contenido)}
-                                        >
-                                            Vista Previa
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                {selectedContent && (
-                    <div>
-                        <div dangerouslySetInnerHTML={{ __html: selectedContent }} />
-                    </div>
+                                            color="primary"
+                                            onClick={handleOpen}
+                                    >
+                                            Crear Newsletter
+                                    </Button>
+                            </Box>
+                            <TableContainer>
+                                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                                            <TableHead>
+                                                    <TableRow>
+                                                            <TableCell>Titulo</TableCell>
+                                                            <TableCell>Destinatario</TableCell>
+                                                            <TableCell>Asunto</TableCell>
+                                                            <TableCell>Fecha</TableCell>
+                                                            <TableCell>Preview</TableCell>
+                                                    </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                    {newletters.map((newsletter) => (
+                                                            <TableRow
+                                                                    key={newsletter._id}
+                                                                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                                                            >
+                                                                    <TableCell component="th" scope="row">
+                                                                            {newsletter.titulo}
+                                                                    </TableCell>
+                                                                    <TableCell>{newsletter.tipo_destinatario}</TableCell>
+                                                                    <TableCell>{newsletter.asunto}</TableCell>
+                                                                    <TableCell>{new Date(newsletter.createdAt).toLocaleDateString()}</TableCell>
+                                                                    <TableCell>
+                                                                            <Button
+                                                                                    variant="contained"
+                                                                                    color="secondary"
+                                                                                    onClick={() => showContent(newsletter.contenido)}
+                                                                            >
+                                                                                    Vista Previa
+                                                                            </Button>
+                                                                    </TableCell>
+                                                            </TableRow>
+                                                    ))}
+                                            </TableBody>
+                                    </Table>
+                            </TableContainer>
+                            {selectedContent && (
+                                    <div>
+                                            <div dangerouslySetInnerHTML={{ __html: selectedContent }} />
+                                    </div>
+                            )}
+                    </>
                 )}
-            </>
-          )}
-        </Grid>
-      </Card>
-      <Toaster />
+            </Grid>
+        </Card>
+        <Toaster />
     </>
-  );
+);
 }

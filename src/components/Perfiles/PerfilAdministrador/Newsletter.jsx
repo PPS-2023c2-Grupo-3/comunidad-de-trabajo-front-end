@@ -21,7 +21,7 @@ import React, { useState, forwardRef, useEffect } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Button from "@mui/material/Button";
-import { postNewsletter, getNewsletters } from "../../../services/newsletter_service";
+import { postNewsletter, getNewsletters, sendNewsletter } from "../../../services/newsletter_service";
 import DOMPurify from "dompurify";
 import { Toaster, toast } from "sonner";
 
@@ -100,7 +100,7 @@ export default function Newsletter() {
   const showContent = (content) => {
     setSelectedContent(content);
     };
-  const enviarNewsletter = async () => {
+  const crearNewsletter = async () => {
     const response = await postNewsletter(titulo, destinatario, asunto, algo);
     if (response) {
       toast.success("Newsletter enviado correctamente");
@@ -111,6 +111,19 @@ export default function Newsletter() {
       toast.error("Error al enviar el newsletter");
     }
   };
+
+  const enviarNewsletter = async (id) => {
+    const response = await sendNewsletter(id);
+    if (response) {
+      toast.success("Newsletter enviado correctamente");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      toast.error("Error al enviar el newsletter");
+    }
+  }
+
 
 return (
     <>
@@ -178,7 +191,7 @@ return (
                             <Button
                                 variant="contained"
                                 color="primary"
-                                onClick={enviarNewsletter}
+                                onClick={crearNewsletter}
                                 sx={{
                                     margin: '1rem',
 
@@ -269,7 +282,7 @@ return (
                                                                             <Button 
                                                                                     variant="contained"
                                                                                     color="primary"
-                                                                                    onClick={() => console.log('Enviar')}
+                                                                                    onClick={() => enviarNewsletter(newsletter.id)}
                                                                                     sx={{
                                                                                             margin: '0.5rem',
                                                                                     }}

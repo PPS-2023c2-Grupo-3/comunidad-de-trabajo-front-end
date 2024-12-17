@@ -35,3 +35,19 @@ export async function getNewsletters() {
     console.error(error);
   }
 }
+
+export async function sendNewsletter(newsletterId) {
+  try {
+    const response = await axios.post(`${config.apiUrl}/newsletter/enviar-newsletter/${newsletterId}`, 
+        {},
+        {
+            headers: {
+            Authorization: `bearer ${sessionStorage.getItem("token")}`,
+            },
+        }
+        );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}

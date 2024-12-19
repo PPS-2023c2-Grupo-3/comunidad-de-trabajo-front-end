@@ -19,8 +19,9 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-
+import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
 import { getEmpresaByCuit } from "../../services/empresas_service";
+import { Link } from "react-router-dom";
 
 const Empresa = () => {
   const idEmpresa = parseInt(window.location.pathname.split("/")[2]);
@@ -148,8 +149,12 @@ const Empresa = () => {
                   Información de la empresa
                 </Typography>
                 <ListItem>
-                  <ListItemText primary={empresa.descripcion} />
+                  <ListItemText primary={empresa.id} secondary="CUIT" />
                 </ListItem>
+                <ListItem>
+                  <ListItemText primary={empresa.descripcion} secondary="Descripción"/>
+                </ListItem>
+
                 <List
                   sx={{
                     display: "grid",
@@ -162,30 +167,49 @@ const Empresa = () => {
                 >
                   <ListItem>
                     <ListItemText
+                      primary={empresa.Rubro.nombre_rubro}
+                      secondary="Rubro"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary={empresa.CadenaValor.nombre}
+                      secondary="Cadena de valor"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary={empresa.calle + " " + empresa.nro}
+                      secondary="Dirección de la empresa"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
                       primary={
-                        empresa.pais +
+                        empresa.Ciudad?.nombre +
                         ", " +
                         empresa.Provincia?.nombre +
                         ", " +
-                        empresa.Ciudad?.nombre
+                        empresa.pais
                       }
                       secondary="Lugar de la empresa"
                     />
                   </ListItem>
+
                   <ListItem>
                     <ListItemText
                       primary={empresa.cp}
                       secondary="Código postal"
                     />
                   </ListItem>
-                  <ListItem>
+                  {/*<ListItem>
                     <ListItemText
                       primary={empresa.Rubro?.nombre_rubro
                         .toLowerCase()
                         .replace(/\b[a-z]/g, (c) => c.toUpperCase())}
                       secondary="Rubro de la empresa"
                     />
-                  </ListItem>
+                      </ListItem>*/}
                 </List>
                 <Divider sx={{ marginTop: "1rem" }} />
                 <Typography
@@ -208,6 +232,20 @@ const Empresa = () => {
                     gap: "1rem",
                   }}
                 >
+                  
+                  <ListItem>
+                    <SupervisorAccountOutlinedIcon
+                      color="primary"
+                      fontSize="large"
+                      sx={{
+                        marginRight: "0.5rem",
+                      }}
+                    />
+                    <ListItemText
+                      primary={empresa.rol_representante}
+                      secondary="Rol del representante de la empresa"
+                    />
+                  </ListItem>
                   <ListItem>
                     <PersonOutlineOutlinedIcon
                       color="primary"
@@ -257,9 +295,14 @@ const Empresa = () => {
                     />
                     <ListItemText
                       primary={
-                        <a href={empresa.web} target="_blank" rel="noreferrer">
+                        <a 
+                          href={
+                            empresa.web.includes("http") ? empresa.web : "https://" + empresa.web
+                          }
+                          target="_blank"
+                          rel="noreferrer">
                           {empresa.nombre_empresa}
-                        </a>
+                          </a>
                       }
                       secondary="Sitio web de la empresa"
                     />

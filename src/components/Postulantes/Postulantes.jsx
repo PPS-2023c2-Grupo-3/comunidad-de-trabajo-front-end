@@ -20,12 +20,15 @@ import {
   TableContainer,
   IconButton,
   Icon,
+  Tab,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
-
+import {
+  putPostulacion,
+} from "../../services/postulaciones_service";
 import { Toaster, toast } from "sonner";
 
 // import PreferenciasOferta from "./PreferenciasOferta";
@@ -38,13 +41,21 @@ import {
   marcarNoContactado,
 } from "../../services/postulacionesId_service";
 import { getOfertaById } from "../../services/ofertas_service";
+import { EncryptStorage } from "encrypt-storage";
+import { putCvVisto } from "../../services/postulaciones_service";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
 
 const Postulantes = () => {
-  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const tipoUsuario = encryptStorage.getItem("tipoUsuario");
   const idOferta = window.location.pathname.split("/")[2];
 
   const [open, setOpen] = useState(false);
@@ -58,9 +69,9 @@ const Postulantes = () => {
       try {
         if (tipoUsuario === "empresa") {
           const response = await getPostulacionesPorIdOferta(0, 20, idOferta);
-          setPostulaciones(response.postulaciones.rows);
+          setPostulaciones(response.postulaciones.rows.filter((postulacion) => postulacion.Estado.id === 4 || postulacion.Estado.id === 5 || postulacion.Estado.id === 1));
         } else {
-          const response = await getPostulacionesPorIdOfertaTodas(
+          const response = await getPostulacionesPorIdOferta(
             0,
             20,
             idOferta
@@ -121,6 +132,7 @@ const Postulantes = () => {
     } else {
       try {
         if (botonOpen === "aceptar") {
+
           const response = await activarPostulacion(id);
           if (response) {
             toast.success("Postulación aceptada correctamente");
@@ -146,6 +158,21 @@ const Postulantes = () => {
       }
     }
   };
+
+  const handleCvVisto = async (id) => {
+    try {
+      const response = await putCvVisto(id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+  const formatoFecha = (fecha) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString();
+  }
+
 
   return (
     <>
@@ -188,16 +215,30 @@ const Postulantes = () => {
                     <Typography variant="h5">DNI</Typography>
                   </TableCell>
                   <TableCell align="center">
-                    <Typography variant="h5">Teléfono</Typography>
+                    <Typography variant="h5">Fecha de Postulación</Typography>
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="h5">CV</Typography>
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="h5">
-                      Evaluación de postulante
+                      {tipoUsuario === "empresa" ? "Evaluación del postulante" : "Evaluación del administrador"}
                     </Typography>
                   </TableCell>
+                  {
+                    tipoUsuario === "admin" ? (
+                      <>
+                      <TableCell align="center">
+                        <Typography variant="h5">Evaluación de la empresa </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="h5">Visto por la empresa</Typography>
+                      </TableCell>
+                      </>
+                    ) : null
+                      
+                    
+                  }
                   <TableCell align="center">
                     <Typography variant="h5">Acciones</Typography>
                   </TableCell>
@@ -223,7 +264,7 @@ const Postulantes = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Typography variant="subtitle1">
-                        {postulacion.Postulante?.telefono}
+                        {formatoFecha(postulacion.createdAt)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
@@ -231,12 +272,14 @@ const Postulantes = () => {
                         href={postulacion.Postulante?.cv}
                         target="_blank"
                         sx={{
-                          color: "green",
+                          color: "#cb3234",
                           "&:hover": {
                             backgroundColor: "lightgrey",
                             color: "black",
                           },
                         }}
+                        disabled={!postulacion.Postulante?.cv}
+                        onClick={tipoUsuario === "empresa" ? () => handleCvVisto(postulacion.id) : null}
                       >
                         <PictureAsPdfIcon />
                       </IconButton>
@@ -244,58 +287,103 @@ const Postulantes = () => {
                     <TableCell align="center">
                       <Icon>
                         {tipoUsuario === "empresa" ? (
-                          postulacion.contactado === true ? (
+                          postulacion.Estado.nombre_estado === "aceptado" ? (
                             <CheckOutlinedIcon
                               sx={{
-                                color: "green",
+                                color: "#28a745",
                               }}
                             />
-                          ) : postulacion.contactado === false ? (
-                            <CloseOutlinedIcon
-                              sx={{
-                                color: "red",
-                              }}
-                            />
-                          ) : (
+                          ) : postulacion.Estado.nombre_estado === "en proceso" ? (
                             <PendingActionsIcon
                               sx={{
                                 color: "orange",
                               }}
                             />
+                          ) : (
+                            <CloseOutlinedIcon
+                              sx={{
+                                color: "red",
+                              }}
+                            />
                           )
-                        ) : postulacion.estado_postulacion === true ? (
+                        ) : postulacion.Estado.nombre_estado === "aceptado" || postulacion.Estado.nombre_estado === "desestimado" || postulacion.Estado.nombre_estado === "en proceso" ? (
                           <CheckOutlinedIcon
                             sx={{
-                              color: "green",
+                              color: "#28a745",
                             }}
                           />
-                        ) : postulacion.estado_postulacion === false ? (
-                          <CloseOutlinedIcon
-                            sx={{
-                              color: "red",
-                            }}
-                          />
-                        ) : (
+                        ) : postulacion.Estado.nombre_estado === "pendiente" ? (
                           <PendingActionsIcon
                             sx={{
                               color: "orange",
                             }}
                           />
+                        ) : (
+                          <CloseOutlinedIcon
+                            sx={{
+                              color: "red",
+                            }}
+                          />
                         )}
                       </Icon>
                     </TableCell>
+                    {tipoUsuario === "admin" ? 
+                    <>
+                    <TableCell align="center">
+                      {
+                        postulacion.Estado.nombre_estado === "aceptado" ? (
+                          <CheckOutlinedIcon
+                            sx={{
+                              color: "#28a745",
+                            }}
+                          />
+                        ) : postulacion.Estado.nombre_estado === "en proceso" || postulacion.Estado.nombre_estado === "pendiente" ? (
+                          <PendingActionsIcon
+                            sx={{
+                              color: "orange",
+                            }}
+                          />
+                        ) : (
+                          <CloseOutlinedIcon
+                            sx={{
+                              color: "red",
+                            }}
+                          />
+                        )
+                      }
+                    </TableCell> 
+                    <TableCell align="center">
+                      {
+                        postulacion.cv_visto ? (
+                          <CheckOutlinedIcon
+                            sx={{
+                              color: "#28a745",
+                            }}
+                          />
+                        ) : (
+                          <CloseOutlinedIcon
+                            sx={{
+                              color: "red",
+                            }}
+                          />
+                        )
+                      }
+                    </TableCell>
+                    </>
+                    : null}
                     <TableCell align="center">
                       <Button
                         variant="contained"
                         sx={{
                           color: "white",
-                          backgroundColor: "green",
+                          backgroundColor: "#28a745",
                           "&:hover": {
-                            backgroundColor: "green",
+                            backgroundColor: "#28a745",
                             color: "white",
                           },
                         }}
                         href={`/postulante/${postulacion.Postulante?.id}`}
+                        onClick={tipoUsuario === "empresa" ? () => handleCvVisto(postulacion.id) : null}
                       >
                         Ver perfil
                       </Button>
@@ -310,15 +398,7 @@ const Postulantes = () => {
                           setBotonOpen("aceptar");
                           handleClickOpen();
                         }}
-                        disabled={
-                          tipoUsuario === "empresa"
-                            ? postulacion.contactado === true
-                              ? true
-                              : false
-                            : postulacion.estado_postulacion === true
-                            ? true
-                            : false
-                        }
+                       
                       >
                         {tipoUsuario === "empresa"
                           ? "Evaluar"
@@ -335,15 +415,6 @@ const Postulantes = () => {
                           setBotonOpen("rechazar");
                           handleClickOpen();
                         }}
-                        disabled={
-                          tipoUsuario === "empresa"
-                            ? postulacion.contactado === false
-                              ? true
-                              : false
-                            : postulacion.estado_postulacion === false
-                            ? true
-                            : false
-                        }
                       >
                         {tipoUsuario === "empresa"
                           ? "Rechazar"

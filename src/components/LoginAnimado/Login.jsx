@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Dialog,
   FormControlLabel,
   Grid,
   IconButton,
@@ -22,17 +23,26 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import * as yup from "yup";
 import { Toaster, toast } from "sonner";
-
-import { signIn, signUp } from "../../services/usuarios_service";
+import { signIn, signUp, aceptarTerminos } from "../../services/usuarios_service";
 import { getPostulanteById } from "../../services/postulantes_service";
 import { getEmpresaByIdUsuario } from "../../services/empresas_service";
+import { EncryptStorage } from 'encrypt-storage';
+import Terminos from "../Template/Terminos";
+
 
 const Login = () => {
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
   const [isSignup, setIsSignup] = useState(false);
   const [tipoUsuario, setTipoUsuario] = useState("postulante");
   const [mostrarContraseñaInicio, setMostrarContraseñaInicio] = useState(false);
   const [mostrarContraseñaRegistro, setMostrarContraseñaRegistro] =
     useState(false);
+  const [open, setOpen] = useState(false);
 
   const toggleMostrarContraseñaInicio = () => {
     setMostrarContraseñaInicio(!mostrarContraseñaInicio);
@@ -61,7 +71,6 @@ const Login = () => {
     emailInicio: yup.string().email().required(),
     contraseñaInicio: yup
       .string()
-      .min(8, "La contraseña debe tener al menos 8 caracteres")
       .required(),
   });
 
@@ -116,19 +125,21 @@ const Login = () => {
       usuario: e.target.emailInicio.value,
       password: e.target.contraseñaInicio.value,
     });
-
+    
     schemaInicioSesion
       .validate({
         emailInicio: e.target.emailInicio.value,
         contraseñaInicio: e.target.contraseñaInicio.value,
       })
       .then(async () => {
-        if (response === undefined) {
+
+      
+        if (response === undefined){
           toast.error("Usuario o contraseña incorrectos");
         } else {
           let datosUsuario;
           let tipoUsuario;
-
+          sessionStorage.setItem("token", response.token);
           if (response.grupo === 1) {
             datosUsuario = await getPostulanteById(response.id);
             tipoUsuario = "postulante";
@@ -138,22 +149,52 @@ const Login = () => {
           } else if (response.grupo === 3) {
             datosUsuario = {};
             tipoUsuario = "admin";
+          }
+            else if (response.grupo === 4) {
+            datosUsuario = {};
+            tipoUsuario = "graduado";
           } else {
             toast.error("Usuario o contraseña incorrectos");
             return;
           }
-
-          sessionStorage.setItem("datosUsuario", JSON.stringify(datosUsuario));
-          sessionStorage.setItem("estaLogueado", "true");
-          sessionStorage.setItem("tipoUsuario", tipoUsuario);
-          sessionStorage.setItem("token", response.token);
-          sessionStorage.setItem("idUsuario", response.id);
-          window.location.href = "/";
-        }
+          if (response.estado === false) {
+            if (tipoUsuario === "postulante") {
+              window.location.href = `/registro/postulante/${response.id}`;
+            } else if (tipoUsuario === "empresa") {
+              window.location.href = `/registro/empresa/${response.id}`;
+          }
+        } else{
+          
+          if(response.aceptoTerminos === false){
+            encryptStorage.setItem("datosUsuario", datosUsuario);
+            encryptStorage.setItem("tipoUsuario", tipoUsuario);
+            encryptStorage.setItem("idUsuario", response.id);   
+            setOpen(true);
+          }
+          else{
+            encryptStorage.setItem("datosUsuario", datosUsuario);
+            encryptStorage.setItem("tipoUsuario", tipoUsuario);
+            encryptStorage.setItem("idUsuario", response.id);
+            encryptStorage.setItem("estaLogueado", "true");
+            window.location.href = "/"
+          }
+      }
+    }
       })
       .catch((err) => {
         toast.error(err.message);
       });
+  };
+  const aceptarCondiciones = () => {
+    setOpen(false);
+    aceptarTerminos(encryptStorage.getItem("idUsuario"));
+    encryptStorage.setItem("estaLogueado", "true");
+    window.location.href = "/";
+  };
+
+  const rechazarCondiciones = () => {
+    setOpen(false);
+    sessionStorage.clear();
   };
 
   const isValidEmail = (email) => {
@@ -172,6 +213,9 @@ const Login = () => {
     }
   };
 
+  
+
+
   return (
     <Box
       sx={{
@@ -188,9 +232,9 @@ const Login = () => {
         sx={{
           boxShadow: "0 14px 28px rgba(0, 0, 0, 0.5)",
         }}
-        className={`container ${isSignup ? "change" : ""}`}
+        className={`containerLogin ${isSignup ? "change" : ""}`}
       >
-        <Box className="forms-container">
+        <Box className="forms-containerLogin">
           {/* Registro */}
           <Box className="form-control signup-form">
             <Box
@@ -232,10 +276,10 @@ const Login = () => {
                       backgroundColor: "#efefef",
                     },
                     "&.Mui-selected": {
-                      backgroundColor: "#5fa92c",
+                      backgroundColor: "#00496d",
                       color: "#fff",
                       "&:hover": {
-                        backgroundColor: "#4b7f1f",
+                        backgroundColor: "#00759b",
                       },
                     },
                   },
@@ -352,20 +396,20 @@ const Login = () => {
                 sx={{
                   padding: "10px",
                   marginTop: "5px",
-                  backgroundColor: "#5fa92c",
+                  backgroundColor: "#00496d",
                   borderRadius: "5px",
                   color: "#fff",
                   textTransform: "none",
                   fontSize: "1rem",
                   "&:hover": {
-                    backgroundColor: "#4b7f1f",
+                    backgroundColor: "#00759b",
                   },
                 }}
               >
                 Siguiente
               </Button>
             </Box>
-            <Typography
+            {/*<Typography
               variant="caption"
               fontFamily={"Poppins, sans-serif"}
               fontSize="0.8rem"
@@ -385,8 +429,8 @@ const Login = () => {
               <IconButton>
                 <LinkedInIcon />
               </IconButton>
+            </Box>*/}
             </Box>
-          </Box>
           {/* Inicio de sesión */}
           <Box className="form-control signin-form">
             <Box
@@ -503,20 +547,20 @@ const Login = () => {
                 sx={{
                   padding: "10px",
                   marginTop: "5px",
-                  backgroundColor: "#5fa92c",
+                  backgroundColor: "#00404F",
                   borderRadius: "5px",
                   color: "#fff",
                   textTransform: "none",
                   fontSize: "1rem",
                   "&:hover": {
-                    backgroundColor: "#4b7f1f",
+                    backgroundColor: "#00759b",
                   },
                 }}
               >
                 Iniciar sesión
               </Button>
             </Box>
-            <Typography
+            {/*<Typography
               variant="caption"
               fontFamily={"Poppins, sans-serif"}
               fontSize="0.8rem"
@@ -542,13 +586,13 @@ const Login = () => {
               <IconButton>
                 <LinkedInIcon />
               </IconButton>
-            </Box>
+            </Box>*/}
           </Box>
         </Box>
 
         {/* ---------- Textos ---------- */}
 
-        <Box className="intros-container">
+        <Box className="intros-containerLogin">
           <Box className="intro-control signin-intro">
             <Box className="intro-control__inner">
               <Typography
@@ -571,7 +615,7 @@ const Login = () => {
                   margin: "10px 0px",
                 }}
               >
-                Que bueno verte de nuevo por acá. Inicia sesión para seguir
+                Inicia sesión para seguir
                 buscando trabajo o publicar tu oferta laboral.
               </Typography>
               <Button
@@ -651,6 +695,61 @@ const Login = () => {
         </Box>
       </Box>
       <Toaster richColors closeButton />
+      <Dialog open={open} >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "20px",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: "bold",
+              margin: "10px 0px",
+            }}
+            
+            
+          >
+            Acepta los términos y condiciones para continuar.
+          </Typography>
+          <Terminos />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+            <Button 
+              variant="text"
+              onClick={() => rechazarCondiciones()}
+              sx={{
+                color: "#dc3545",
+                textTransform: "none",
+                fontSize: "1rem",
+                "&:hover": {
+                  color: "#dc3545",
+              }}
+            }
+            >
+              Rechazar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={aceptarCondiciones}
+              sx={{
+                backgroundColor: "#00496d",
+                color: "#fff",
+                textTransform: "none",
+                fontSize: "1rem",
+                "&:hover": {
+                  backgroundColor: "#00759b",
+              }}
+            }
+            >
+              Aceptar
+            </Button>
+            </Box>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

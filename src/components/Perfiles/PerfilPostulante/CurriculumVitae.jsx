@@ -3,13 +3,18 @@ import { Button, CardHeader, Grid, Card, Typography } from "@mui/material";
 import { useState } from "react";
 
 import { uploadCV } from "../../../services/files_service";
-
+import {Tooltip} from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { Toaster, toast } from "sonner";
+import { EncryptStorage } from "encrypt-storage";
 
 const CurriculumVitae = () => {
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
   const token = sessionStorage.getItem("token");
 
   const [cvSeleccionado, setCvSeleccionado] = useState(null); // Para guardar la imagen seleccionada en el input[type=file]
@@ -25,7 +30,7 @@ const CurriculumVitae = () => {
       const response = await uploadCV(cv, id, token);
       if (response) {
         datosUsuario.cv = response.url;
-        sessionStorage.setItem("datosUsuario", JSON.stringify(datosUsuario));
+        encryptStorage.setItem("datosUsuario", datosUsuario);
         toast.success("Curriculum Vitae subido con éxito");
         setTimeout(() => {
           window.location.reload();
@@ -89,6 +94,10 @@ const CurriculumVitae = () => {
             endIcon={<DescriptionIcon />}
             sx={{
               marginTop: 3.6,
+              backgroundColor: datosUsuario.cv ? "#57A42D" : "#D3D3D3",
+              ":hover": {
+                backgroundColor: datosUsuario.cv ? "#4c8c2b" : "#D3D3D3",
+              },
             }}
             href={datosUsuario.cv}
             target="_blank"
@@ -100,6 +109,7 @@ const CurriculumVitae = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={6}>
           {isCVSelected && (
+            <>
             <Button
               onClick={() =>
                 handleSaveCV(cvSeleccionado, datosUsuario.id, token)
@@ -114,6 +124,12 @@ const CurriculumVitae = () => {
             >
               Subir {cvSeleccionado.name}
             </Button>
+            <Tooltip>
+                <Typography variant="caption" color="textSecondary">
+                    Para cambiar el Currículum Vitae, presione el botón "Subir ${cvSeleccionado.name}".
+                </Typography>
+              </Tooltip>
+            </>
           )}
         </Grid>
       </Grid>

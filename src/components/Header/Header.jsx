@@ -14,11 +14,23 @@ import {
 import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import IconUser from "./IconUser";
-
+import logoDvt from "../../assets/logoDvt.png";
 import { getOfertas } from "../../services/ofertas_service";
 import PropTypes from "prop-types";
+import logouni from "../../assets/logo-cpyme-uni.svg";
+import logoVinculacion from "../../assets/logoVinculacion.svg";
+import logoUnahur from "../../assets/logoUnahur.svg";
+import { EncryptStorage } from 'encrypt-storage';
+
+
 
 const Header = (props) => {
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
   const { setOfertas } = props;
 
   const Buscador = () => {
@@ -86,7 +98,7 @@ const Header = (props) => {
   const [estaLogueado, setEstaLogueado] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem("estaLogueado") === "true") {
+    if (encryptStorage.getItem("estaLogueado")) {
       setEstaLogueado(true);
     }
   }, []);
@@ -98,9 +110,9 @@ const Header = (props) => {
         <AppBar position="static">
           <Toolbar
             sx={{
-              background: "linear-gradient(90deg, #34d399, #5fa92c)",
+              background: "#ffffff",
               color: "#fff",
-              padding: "10px",
+              padding: "20px",
             }}
           >
             <Grid
@@ -108,21 +120,38 @@ const Header = (props) => {
               item
               xs={false}
               sm={3}
-              display={{ xs: "none", sm: "block" }}
-              justifyContent="flex-start"
-              alignItems="center"
-              alignContent="center"
+              sx={{
+                display: { xs: "none", sm: "block"},
+                justifyContent: "flex-start",
+                flexDirection: "row",
+                
+              }}
+              
             >
               <Link href="/">
+                {/*<img
+                  src={logouni}
+                  alt="UNAHUR-DVT"
+                  style={{ width: "auto" }}
+                  
+                />*/}
                 <img
-                  src="https://cdn.discordapp.com/attachments/956988369693454466/989600731369709669/Logoblanco.png"
-                  alt="Logo comunidad de trabajo"
+                  src={logoUnahur}
+                  alt="Universidad Nacional de Hurlingham"
                   style={{
-                    height: "60px",
                     width: "auto",
-                    padding: "5px",
-                    marginTop: "5px",
-                    alignContent: "center",
+                    height: "85px",
+                    marginRight: "4px",
+                  }}
+                  
+                />
+                <img
+                  src={logoVinculacion}
+                  alt="Dirección de Vinculación Tecnológica"
+                  style={{
+                    width: "auto",
+                    height: "85px",
+                    marginRight: "4px",
                   }}
                 />
               </Link>
@@ -132,7 +161,7 @@ const Header = (props) => {
               item
               xs={8}
               sm={6}
-              margin={{ xs: 1, sm: 0 }}
+              margin={{ xs: 1, sm: 2 }}
               justifyContent="center"
               alignItems="center"
             >
@@ -150,13 +179,15 @@ const Header = (props) => {
                 <IconUser />
               ) : (
                 <Button
-                  variant="outlined"
-                  color="inherit"
+                  variant="contained"
                   href="/login"
                   size="large"
+                  
                   sx={{
                     borderRadius: "5px",
                     borderWidth: "2px",
+                    backgroundColor: "#00404f",
+                    color: "#ffffff",
                   }}
                 >
                   Ingresá

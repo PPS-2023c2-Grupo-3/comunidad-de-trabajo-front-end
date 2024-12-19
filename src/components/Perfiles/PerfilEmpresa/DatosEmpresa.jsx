@@ -10,6 +10,7 @@ import {
   Card,
   TextField,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
@@ -28,12 +29,20 @@ import { uploadLogo } from "../../../services/files_service";
 import { Toaster, toast } from "sonner";
 
 import * as yup from "yup";
-
+import { EncryptStorage } from "encrypt-storage";
 import { useEffect, useState } from "react";
 
 const DatosEmpresa = () => {
-  const idUsuario = sessionStorage.getItem("idUsuario");
+
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const token = sessionStorage.getItem("token");
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
 
   const [validarErrores, setValidarErrores] = useState({}); // Para controlar los errores
   const [isSubmitting, setIsSubmitting] = useState(false); // Para validar el formulario
@@ -87,9 +96,9 @@ const DatosEmpresa = () => {
           ...empresa,
           logo: response,
         });
-        const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+        const datosUsuario = encryptStorage.getItem("datosUsuario");
         datosUsuario.logo = response.url;
-        sessionStorage.setItem("datosUsuario", JSON.stringify(datosUsuario));
+        encryptStorage.setItem("datosUsuario", datosUsuario);
         toast.success("Logo actualizado correctamente");
         setTimeout(() => {
           window.location.reload();
@@ -110,6 +119,8 @@ const DatosEmpresa = () => {
           nombre_empresa: empresa.nombre_empresa,
           nombreEmpresa: empresa.nombre_empresa,
           descripcion: empresa.descripcion,
+          rol_representante: empresa.rol_representante,
+          rolRepresentante: empresa.rol_representante,
           nombre_representante: empresa.nombre_representante,
           nombreRepresentante: empresa.nombre_representante,
           email_representante: empresa.email_representante,
@@ -157,6 +168,7 @@ const DatosEmpresa = () => {
   const schema = yup.object().shape({
     nombre_empresa: yup.string().required("El nombre es obligatorio"),
     descripcion: yup.string().required("La descripción es obligatoria"),
+    rol_representante: yup.string().required("El rol es obligatorio"),
     nombre_representante: yup
       .string()
       .required("El nombre del representante es obligatorio"),
@@ -270,6 +282,7 @@ const DatosEmpresa = () => {
               />
             </Button>
             {isImageSelected && (
+              <>
               <Button
                 onClick={() => handleSaveLogo(imagenSeleccionada, empresa.id)}
                 sx={{
@@ -281,8 +294,22 @@ const DatosEmpresa = () => {
               >
                 Confirmar imagen
               </Button>
+              <Tooltip>
+                <Typography variant="caption" color="textSecondary">
+                    Para cambiar la imagen, presione el botón "Confirmar imagen".
+                </Typography>
+              </Tooltip>
+              </>
             )}
+            {
+              datosUsuario.Estado.id === 2 && !datosUsuario.logo ? (
+                <Typography variant="caption" color="error">
+                    Su cuenta aún no ha sido verificada. Para agilizar el proceso, por favor suba el logo de su empresa.
+                </Typography>
+              ) : null
+            }
           </Box>
+
         </Stack>
         <Divider />
         <Box>
@@ -351,6 +378,37 @@ const DatosEmpresa = () => {
                 helperText={
                   isSubmitting && validarErrores.descripcion
                     ? validarErrores.descripcion
+                    : ""
+                }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField
+                label="Rol del representante"
+                variant="outlined"
+                value={empresa.rol_representante || ""}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                disabled={isFieldDisabled}
+                sx={{
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
+                  },
+                  "&& .MuiFormLabel-root.Mui-disabled": {
+                    color: "rgba(0, 0, 0, 0.80)",
+                  },
+                }}
+                onChange={(e) =>
+                  setEmpresa({
+                    ...empresa,
+                    rol_representante: e.target.value,
+                    rolRepresentante: e.target.value,
+                  })
+                }
+                error={isSubmitting && validarErrores.rol_representante}
+                helperText={
+                  isSubmitting && validarErrores.rol_representante
+                    ? validarErrores.rol_representante
                     : ""
                 }
               />

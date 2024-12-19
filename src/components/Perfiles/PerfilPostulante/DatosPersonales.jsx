@@ -10,6 +10,7 @@ import {
   Card,
   TextField,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 
 import * as yup from "yup";
@@ -22,7 +23,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { useEffect, useState } from "react";
 
 import { Toaster, toast } from "sonner";
-
+import { EncryptStorage } from "encrypt-storage";
 import { getPostulanteById } from "../../../services/postulantes_service";
 import { putPostulante } from "../../../services/postulantes_service";
 import { getTiposDocumentos } from "../../../services/tiposDocumentos_service";
@@ -31,7 +32,13 @@ import { getCiudades } from "../../../services/ciudades_service";
 import { uploadFoto } from "../../../services/files_service";
 
 const DatosPersonales = () => {
-  const idUsuario = sessionStorage.getItem("idUsuario");
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const token = sessionStorage.getItem("token");
 
   const [validarErrores, setValidarErrores] = useState({}); // Para controlar los errores
@@ -110,9 +117,9 @@ const DatosPersonales = () => {
       const response = await uploadFoto(foto, id, token);
       if (response) {
         setUsuario({ ...usuario, foto: response });
-        const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+        const datosUsuario = encryptStorage.getItem("datosUsuario");
         datosUsuario.foto = response.url;
-        sessionStorage.setItem("datosUsuario", JSON.stringify(datosUsuario));
+        encryptStorage.setItem("datosUsuario", (datosUsuario));
         toast.success("Foto actualizada con éxito");
         setTimeout(() => {
           window.location.reload();
@@ -160,9 +167,6 @@ const DatosPersonales = () => {
           setUsuario(datosActualizados);
           setIsSubmitting(false);
           toast.success("Datos actualizados con éxito");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
         } else {
           toast.error("Error al actualizar los datos");
         }
@@ -299,6 +303,7 @@ const DatosPersonales = () => {
               />
             </Button>
             {isImageSelected && (
+              <>
               <Button
                 onClick={() =>
                   handleSaveFoto(imagenSeleccionada, usuario.id, token)
@@ -312,6 +317,12 @@ const DatosPersonales = () => {
               >
                 Confirmar imagen
               </Button>
+              <Tooltip>
+                <Typography variant="caption" color="textSecondary">
+                    Para cambiar la imagen, presione el botón "Confirmar imagen".
+                </Typography>
+              </Tooltip>
+              </>
             )}
           </Box>
         </Stack>
@@ -331,7 +342,7 @@ const DatosPersonales = () => {
                 value={usuario.nombre || ""}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -356,7 +367,7 @@ const DatosPersonales = () => {
                 value={usuario.apellido || ""}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -382,7 +393,7 @@ const DatosPersonales = () => {
                 value={usuario.Usuario.usuario || ""}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -403,7 +414,7 @@ const DatosPersonales = () => {
               <TextField
                 fullWidth
                 type="date"
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -424,7 +435,7 @@ const DatosPersonales = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -462,7 +473,7 @@ const DatosPersonales = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -570,7 +581,7 @@ const DatosPersonales = () => {
                 label="Provincia"
                 variant="outlined"
                 select
-                value={usuario.fk_id_provincia || ""}
+                value={usuario.fk_id_provincia || " "}
                 InputLabelProps={{ shrink: true }}
                 onChange={(e) =>
                   setUsuario({
@@ -616,20 +627,11 @@ const DatosPersonales = () => {
                 }
               >
                 <MenuItem value="">Selecciona una ciudad</MenuItem>
-                {ciudades
-                  .filter(
-                    (ciudades) =>
-                      ciudades.fk_id_provincia === usuario.fk_id_provincia
-                  )
-                  .filter(
-                    (ciudades) =>
-                      ciudades.fk_id_provincia === usuario.fk_id_provincia
-                  )
-                  .map((ciudad) => (
-                    <MenuItem key={ciudad.id} value={ciudad.id}>
-                      {ciudad.nombre}
-                    </MenuItem>
-                  ))}
+                {ciudades.map((ciudad) => (
+                  <MenuItem key={ciudad.id} value={ciudad.id}>
+                    {ciudad.nombre}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
@@ -656,7 +658,7 @@ const DatosPersonales = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
-                disabled={isFieldDisabled}
+                disabled
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
@@ -672,9 +674,10 @@ const DatosPersonales = () => {
                 onChange={(e) => handleInputChange("genero", e.target.value)}
                 error={Boolean(validarErrores.genero)}
                 helperText={validarErrores.genero}
+                
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={6}>
+           {/* <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
                 disabled={isFieldDisabled}
@@ -695,9 +698,9 @@ const DatosPersonales = () => {
                 }
                 error={Boolean(validarErrores.discapacidad)}
                 helperText={validarErrores.discapacidad}
-              />
+              />*}
             </Grid>
-            <Grid item xs={12} sm={6} md={6}>
+            {/*<Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
                 disabled={isFieldDisabled}
@@ -717,7 +720,7 @@ const DatosPersonales = () => {
                 error={Boolean(validarErrores.linkedIn)}
                 helperText={validarErrores.linkedIn}
               />
-            </Grid>
+            </Grid>*/}
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth

@@ -50,13 +50,13 @@ const Ofertas = () => {
 
   let estado =
     estadoOferta === "Ofertas activas"
-      ? "Activa"
+      ? 1
       : estadoOferta === "Ofertas pendientes"
-      ? "Pendiente"
+      ? 2
       : estadoOferta === "Ofertas en revisión"
-      ? "Observada"
+      ? 4
       : estadoOferta === "Ofertas finalizadas"
-      ? "Finalizada"
+      ? 5
       : null;
 
   const handleClickOpen = (ofertaID, action) => {
@@ -78,62 +78,30 @@ const Ofertas = () => {
   };
 
   const handleFinalizarOferta = async (idOferta) => {
-    let idEstado =
-      action === "finalizar"
-        ? "Finalizada"
-        : action === "activar"
-        ? "Activa"
-        : action === "suspender"
-        ? "Observada"
-        : null;
-
-    try {
-      const response = await putOferta(idOferta, { estado: idEstado }, token);
-      if (response === "OK") {
-        toast.success(
-          `La oferta se ha ${
-            action === "finalizar"
-              ? "finalizado"
-              : action === "activar"
-              ? "activado"
-              : action === "suspender"
-              ? "suspendido"
-              : null
-          } correctamente`
-        );
+    
+    if (action === "finalizar") {
+      const response = await putOferta(idOferta, { idEstado: 5 }, token);
+      if (response) {
+        toast.success("Oferta finalizada con éxito");
         handleClose();
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        toast.error(
-          `No se ha podido ${
-            action === "finalizar"
-              ? "finalizar"
-              : action === "activar"
-              ? "activar"
-              : action === "suspender"
-              ? "suspender"
-              : null
-          } la oferta`
-        );
-        handleClose();
+        setPaginaActual(1);
       }
-    } catch (error) {
-      console.log("error", error);
-      toast.error(
-        `No se ha podido ${
-          action === "finalizar"
-            ? "finalizar"
-            : action === "activar"
-            ? "activar"
-            : action === "suspender"
-            ? "suspender"
-            : null
-        } la oferta`
-      );
-      handleClose();
+    } else if (action === "activar") {
+      const response = await putOferta(idOferta, { idEstado: 1 }, token);
+      if (response) {
+        toast.success("Oferta activada con éxito");
+        handleClose();
+        setPaginaActual(1);
+      }
+    } else if (action === "suspender") {
+      const response = await putOferta(idOferta, { idEstado: 4 }, token);
+      if (response) {
+        toast.success("Oferta suspendida con éxito");
+        handleClose();
+        setPaginaActual(1);
+      }
     }
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -149,6 +117,7 @@ const Ofertas = () => {
       setTotalPaginas(response.totalPaginas);
     };
     traerOfertas();
+    console.log(ofertas)
   }, [estado, paginaActual]);
 
   const handleSubmit = async (e, buscador) => {
@@ -162,6 +131,7 @@ const Ofertas = () => {
   const handleChangeEstadoOferta = (e) => {
     setEstadoOferta(e.target.textContent);
     setPaginaActual(1);
+    console.log(ofertas)
   };
 
   const botonVer = (oferta) => {
@@ -170,10 +140,11 @@ const Ofertas = () => {
         variant="contained"
         sx={{
           color: "white",
-          backgroundColor: "green",
+          backgroundColor: "#28a745",
           "&:hover": {
-            backgroundColor: "green",
+            backgroundColor: "#28a745",
             color: "white",
+            opacity: 0.8,
           },
         }}
         href={`/oferta/${oferta.id}`}
@@ -191,12 +162,12 @@ const Ofertas = () => {
           variant="outlined"
           sx={{
             margin: 1,
-            color: "green",
-            borderColor: "green",
+            color: "#28a745",
+            borderColor: "#28a745",
             "&:hover": {
               backgroundColor: "lightgrey",
               color: "black",
-              borderColor: "green",
+              borderColor: "#28a745",
             },
           }}
           href={`/postulantes/${oferta.id}`}
@@ -206,12 +177,12 @@ const Ofertas = () => {
         <Button
           variant="outlined"
           sx={{
-            color: "red",
-            borderColor: "red",
+            color: "#dc3545",
+            borderColor: "#dc3545",
             "&:hover": {
-              backgroundColor: "red",
+              backgroundColor: "#dc3545",
               color: "white",
-              borderColor: "red",
+              borderColor: "#dc3545",
             },
           }}
           onClick={() => handleClickOpen(oferta.id, "finalizar")}
@@ -230,12 +201,12 @@ const Ofertas = () => {
           variant="outlined"
           sx={{
             margin: 1,
-            color: "green",
-            borderColor: "green",
+            color: "#28a745",
+            borderColor: "#28a745",
             "&:hover": {
               backgroundColor: "lightgrey",
               color: "black",
-              borderColor: "green",
+              borderColor: "#28a745",
             },
           }}
           onClick={() => handleClickOpen(oferta.id, "activar")}
@@ -273,12 +244,12 @@ const Ofertas = () => {
           variant="outlined"
           sx={{
             margin: 1,
-            color: "green",
-            borderColor: "green",
+            color: "#28a745",
+            borderColor: "#28a745",
             "&:hover": {
               backgroundColor: "lightgrey",
-              color: "black",
-              borderColor: "green",
+              color: "#28a745",
+              borderColor: "#28a745",
             },
           }}
           href={`/postulantes/${oferta.id}`}
@@ -289,12 +260,12 @@ const Ofertas = () => {
           variant="outlined"
           sx={{
             margin: 1,
-            color: "green",
-            borderColor: "green",
+            color: "#28a745",
+            borderColor: "#28a745",
             "&:hover": {
               backgroundColor: "lightgrey",
               color: "black",
-              borderColor: "green",
+              borderColor: "#28a745",
             },
           }}
           onClick={() => handleClickOpen(oferta.id, "cierre")}
@@ -306,24 +277,24 @@ const Ofertas = () => {
   };
 
   const estadoMap = {
-    Activa: {
+    activa: {
       name: "Ofertas activas",
-      color: "green",
+      color: "#28a745",
       actions: accionesOfertasActivas,
     },
-    Pendiente: {
+    pendiente: {
       name: "Ofertas pendientes",
-      color: "orange",
+      color: "#f0ad4e",
       actions: accionesOfertasPendientes,
     },
-    Observada: {
+    observada: {
       name: "Ofertas en revisión",
-      color: "red",
+      color: "#dc3545",
       actions: accionesOfertasEnRevision,
     },
-    Finalizada: {
+    finalizada: {
       name: "Ofertas finalizadas",
-      color: "black",
+      color: "#6c757d",
       actions: accionesOfertasFinalizadas,
     },
   };
@@ -346,7 +317,7 @@ const Ofertas = () => {
         component="header"
         my={3}
         direction="row"
-        justifyContent="space-between"
+        justifyContent="flex-start"
         alignItems="center"
         flexWrap="wrap"
         textTransform="uppercase"
@@ -356,19 +327,20 @@ const Ofertas = () => {
           <Button
             key={key}
             variant="contained"
+            size="large"
             sx={{
-              color: "white",
               backgroundColor: color,
+              color: "white",
               "&:hover": {
                 backgroundColor: color,
                 color: "white",
+                opacity: 0.8,
               },
-              width: "200px",
               margin: 1,
             }}
             onClick={handleChangeEstadoOferta}
           >
-            {name}
+            {name} 
           </Button>
         ))}
       </Stack>
@@ -404,7 +376,7 @@ const Ofertas = () => {
                   </Typography>
                 </TableCell>
                 <TableCell align="center">
-                  {estadoMap[oferta.estado].actions(oferta)}
+                  {estadoMap[oferta.Estado.nombre_estado].actions(oferta)}
                 </TableCell>
               </TableRow>
             ))}

@@ -26,8 +26,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BusinessIcon from "@mui/icons-material/Business";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import StorageIcon from "@mui/icons-material/Storage";
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import CollectionsIcon from "@mui/icons-material/Collections";
+import NewspaperIcon from '@mui/icons-material/Newspaper';
 import WorkIcon from "@mui/icons-material/Work";
-
 import Header from "../Header/Header";
 import DatosPersonales from "./PerfilPostulante/DatosPersonales";
 import DatosAcademicos from "./PerfilPostulante/DatosAcademicos";
@@ -40,16 +43,23 @@ import Postulantes from "./PerfilAdministrador/Postulantes";
 import Ofertas from "./PerfilAdministrador/Ofertas";
 import Empresas from "./PerfilAdministrador/Empresas";
 // import Base from "./PerfilPostulante/Base";
-
+import Galeria from "./PerfilAdministrador/Galeria";
 import { getPostulanteById } from "../../services/postulantes_service";
 import { getEmpresaByIdUsuario } from "../../services/empresas_service";
 import { forwardRef, useEffect, useState } from "react";
 import { postularseBaseConstante } from "../../services/postulaciones_service";
 import { uploadCV } from "../../services/files_service";
 import { Toaster, toast } from "sonner";
-import BaseUNAHUR from "./PerfilAdministrador/BaseUNAHUR";
-
-import enProceso from "../../assets/Processing-bro.svg";
+import Newsletter from "./PerfilAdministrador/Newsletter";
+import ExperienciaLaboral from "./PerfilPostulante/ExperienciaLaboral";
+import { EncryptStorage } from "encrypt-storage";
+import LockIcon from '@mui/icons-material/Lock';
+import CambiarContraseña from "./CambiarContraseña";
+import Estadisticas from "./PerfilAdministrador/Estadisticas";
+import ArticleIcon from '@mui/icons-material/Article';
+import Articulos from "./PerfilAdministrador/Articulos";
+import VerArticulos from "./PerfilGraduado/VerArticulos";
+import CrearArticulo from "./PerfilGraduado/CrearArticulo";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -65,40 +75,34 @@ const menuOptionsPostulante = [
   },
   {
     id: "2",
+    name: "cambiarContraseña",
+    Icon: LockIcon,
+    text: "Cambiar contraseña",
+    renderSection: <CambiarContraseña />
+  },
+  {
+    id: "3",
     name: "datosAcademicos",
     Icon: SchoolIcon,
     text: "Datos académicos",
     renderSection: <DatosAcademicos />,
   },
   {
-    id: "3",
-    name: "formacion",
+    id: "4",
+    name: "experiencia",
     Icon: WorkIcon,
-    text: "Formación",
-    renderSection: (
-      <img
-        src={enProceso}
-        alt="En proceso"
-        style={{
-          width: "60%",
-          height: "60%",
-          margin: "auto",
-          display: "block",
-          marginTop: "10",
-          marginBottom: "10",
-        }}
-      />
-    ),
+    text: "Experiencia laboral",
+    renderSection: <ExperienciaLaboral />,
   },
   {
-    id: "4",
+    id: "5",
     name: "curriculumVitae",
     Icon: DescriptionIcon,
     text: "Curriculum Vitae",
     renderSection: <CurriculumVitae />,
   },
   {
-    id: "5",
+    id: "6",
     name: "misPostulaciones",
     Icon: AssignmentIcon,
     text: "Mis postulaciones",
@@ -116,13 +120,20 @@ const menuOptionsEmpresa = [
   },
   {
     id: "2",
+    name: "CambiarContraseña",
+    Icon: LockIcon,
+    text: "Cambiar contraseña",
+    renderSection: <CambiarContraseña />
+  },
+  {
+    id: "3",
     name: "verOfertas",
     Icon: AssignmentIcon,
     text: "Ver ofertas",
     renderSection: <VerOfertas />,
   },
   {
-    id: "3",
+    id: "4",
     name: "crearOferta",
     Icon: PostAddIcon,
     text: "Crear oferta",
@@ -140,34 +151,86 @@ const menuOptionsAdmin = [
   },
   {
     id: "2",
+    name: "cambiarContraseña",
+    Icon: LockIcon,
+    text: "Cambiar contraseña",
+    renderSection: <CambiarContraseña />,
+  },
+  {
+    id: "3",
     name: "ofertas",
     Icon: AssignmentIcon,
     text: "Ofertas",
     renderSection: <Ofertas />,
   },
   {
-    id: "3",
+    id: "4",
     name: "empresas",
     Icon: BusinessIcon,
     text: "Empresas",
     renderSection: <Empresas />,
   },
   {
-    id: "4",
-    name: "base",
-    Icon: StorageIcon,
-    text: "Base UNAHUR",
-    renderSection: <BaseUNAHUR />,
+    id:"5",
+    name: "galeria",
+    Icon: CollectionsIcon,
+    text: "Galería",
+    renderSection: <Galeria />
   },
+  {
+    id:"6",
+    name: "newsletters",
+    Icon: NewspaperIcon,
+    text: "Newsletters",
+    renderSection: <Newsletter />
+  
+  },
+  {
+    id:"7",
+    name: "articulos",
+    Icon: ArticleIcon,
+    text: "Artículos",
+    renderSection: <Articulos />
+  },
+ {
+    id:"8",
+    name: "estadisticas",
+    Icon: BarChartIcon,
+    text: "Estadísticas",
+    renderSection: <Estadisticas />
+ }
 ];
 
+const menuOptionsGraduado = [
+  {
+    id: "1",
+    name: "VerArticulos",
+    Icon: ArticleIcon,
+    text: "Ver Artículos",
+    renderSection: <VerArticulos />
+  },
+  {
+    id: "2",
+    name: "CrearArticulo",
+    Icon: PostAddIcon,
+    text: "Crear Artículo",
+    renderSection: <CrearArticulo />
+  }
+]
+
 function Perfil() {
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
   const [open, setOpen] = useState(false);
   const [cvSeleccionado, setCvSeleccionado] = useState(null); // Para guardar la imagen seleccionada en el input[type=file]
   const [isCVSelected, setIsCVSelected] = useState(false); // Para controlar si se seleccionó una imagen o no
   const [searchParams, setSearchParams] = useSearchParams();
-  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
-  const idUsuario = sessionStorage.getItem("idUsuario");
+  const tipoUsuario = encryptStorage.getItem("tipoUsuario");
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const token = sessionStorage.getItem("token");
 
   const [usuario, setUsuario] = useState({
@@ -229,6 +292,8 @@ function Perfil() {
         return menuOptionsEmpresa;
       case "admin":
         return menuOptionsAdmin;
+      case "graduado":
+        return menuOptionsGraduado;
       default:
         return menuOptionsPostulante;
     }
@@ -258,15 +323,7 @@ function Perfil() {
         textTransform="uppercase"
         paddingX={2}
       >
-        <Typography
-          variant="h5"
-          fontSize={18}
-          borderLeft={5}
-          borderColor="primary.main"
-          pl={1.5}
-        >
-          Tu Perfil
-        </Typography>
+        
 
         <IconButton
           onClick={() => (window.location.href = "/")}
@@ -280,6 +337,15 @@ function Perfil() {
           <ArrowBackIcon />
           Volver
         </IconButton>
+        <Typography
+          variant="h5"
+          fontSize={18}
+          borderLeft={5}
+          borderColor="primary.main"
+          pl={1.5}
+        >
+          Tu Perfil
+        </Typography>
       </Stack>
       <Grid container rowSpacing={2} columnSpacing={4} paddingX={2}>
         <Grid item xs={12} sm={4} md={3}>
@@ -321,7 +387,7 @@ function Perfil() {
                   {text}
                 </MenuItem>
               ))}
-              {tipoUsuario === "postulante" && [
+              {/*{tipoUsuario === "postulante" && [
                 <MenuItem
                   key="subirCvMenuItem"
                   onClick={() => {
@@ -412,7 +478,7 @@ function Perfil() {
                   </DialogActions>
                 </Dialog>,
                 <Toaster key="subirCvToaster" richColors closeButton />,
-              ]}
+              ]*/}
             </MenuList>
           </Card>
         </Grid>
@@ -423,6 +489,7 @@ function Perfil() {
           }
         </Grid>
       </Grid>
+      <Toaster richColors />
     </>
   );
 }

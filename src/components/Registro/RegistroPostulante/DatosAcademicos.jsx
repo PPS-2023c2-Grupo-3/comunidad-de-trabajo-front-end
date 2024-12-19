@@ -5,13 +5,18 @@ import {
   TextField,
   Typography,
   Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Paper
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useEffect, useState } from "react";
 
 import PropTypes from "prop-types";
 
-import { getCarreras } from "../../../services/carreras_service";
 import { getEstudios } from "../../../services/estudios_service";
+import Terminos from "../../Template/Terminos";
 
 export default function DatosAcademicos({
   postulante,
@@ -28,21 +33,17 @@ export default function DatosAcademicos({
     setValidarErrores: PropTypes.func.isRequired,
   };
 
-  const [carreras, setCarreras] = useState([]);
   const [estudios, setEstudios] = useState([]);
   const [carreraEnabled, setCarreraEnabled] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
 
   useEffect(() => {
-    const getCarrerasData = async () => {
-      const response = await getCarreras();
-      setCarreras(response.carreras);
-    };
+    
     const getEstudiosData = async () => {
       const response = await getEstudios();
-      setEstudios(response.estudios);
+      setEstudios(response);
     };
     getEstudiosData();
-    getCarrerasData();
   }, []);
 
   const handleChange = (e) => {
@@ -104,37 +105,24 @@ export default function DatosAcademicos({
             </MenuItem>
             {estudios.map((estudio) => (
               <MenuItem key={estudio.id} value={estudio.id}>
-                {estudio.nombre_estudio_estado}
+                {estudio.nombre_estudio} {estudio.estado_estudio}
               </MenuItem>
             ))}
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
-            select
             label="Carrera"
             id="carrera"
             name="carrera"
             variant="outlined"
             fullWidth
-            value={
-              carreras.find((carrera) => carrera.id === postulante.carrera)
-                ?.id || ""
-            }
+            value={postulante.carrera || ""}
             onChange={(e) => handleChange(e)}
             error={Boolean(validarErrores.carrera)}
             helperText={validarErrores.carrera ? validarErrores.carrera : ""}
             disabled={!carreraEnabled}
-          >
-            <MenuItem value="" disabled>
-              Seleccione una opción
-            </MenuItem>
-            {carreras.map((carrera) => (
-              <MenuItem key={carrera.id} value={carrera.id}>
-                {carrera.nombre_carrera}
-              </MenuItem>
-            ))}
-          </TextField>
+          />
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -152,11 +140,11 @@ export default function DatosAcademicos({
           />
         </Grid>
       </Grid>
-      <Grid container spacing={3} sx={{ marginY: 2 }}>
+      <Grid container spacing={3} sx={{ marginY: "4px" }}>
         <Grid item xs={12}>
           <FormControlLabel
             control={<Checkbox />}
-            label="Alumno de la UNAHUR"
+            label="¿Es estudiante de UNAHUR?"
             name="alumnoUnahur"
             checked={postulante.alumnoUnahur}
             onChange={(e) =>
@@ -168,6 +156,19 @@ export default function DatosAcademicos({
           />
         </Grid>
       </Grid>
+      <Terminos />
+      {/*<Grid container spacing={1} sx={{ marginY: "4px" }}>
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Checkbox />}
+            label="Acepto los términos y condiciones"
+            name="aceptaTerminos"
+            checked={aceptaTerminos}
+            onChange={(e) => setAceptaTerminos(e.target.checked)}
+          />
+        </Grid>
+      </Grid>*/}
+
     </>
   );
 }

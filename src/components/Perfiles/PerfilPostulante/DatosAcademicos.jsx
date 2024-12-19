@@ -23,57 +23,66 @@ import SaveIcon from "@mui/icons-material/Save";
 
 import {
   getPostulanteById,
-  agregarIdiomas,
   putPostulante,
-  eliminarIdioma,
   agregarAptitudes,
   agregarPreferencias,
 } from "../../../services/postulantes_service";
-import { getCarreras } from "../../../services/carreras_service";
 import { getEstudios } from "../../../services/estudios_service";
 import { getAptitudes } from "../../../services/aptitudes_service";
 import { getPreferencias } from "../../../services/preferencias_service";
-// import { getIdiomasPostulante } from "../../../services/idiomasPostulantes_service";
-
+import { getIdiomasPostulante } from "../../../services/idiomasPostulantes_service";
+import { postIdiomasPostulantes } from "../../../services/idiomasPostulantes_service";
+import { deleteIdioma } from "../../../services/idiomasPostulantes_service";
 import { Fragment, useEffect, useState } from "react";
+import { getHabilidadesPostulante, postHabilidadesPostulantes, deleteHabilidad } from "../../../services/habilidadesPostulante_service";
+import { getHabilidades } from "../../../services/habilidades_service";
+import { EncryptStorage } from 'encrypt-storage';
 
-import { PreferenciasPostulante } from "../../Preferencias/PreferenciasPostulante";
-import { AptitudesPostulante } from "../../Aptitudes/AptitudesPostulate";
 
 const idiomas = [
-  { id: 1, idioma: "Chino" },
+  { id: 1, idioma: "Español" },
   { id: 2, idioma: "Inglés" },
   { id: 3, idioma: "Portugués" },
-  { id: 4, idioma: "Alemán" },
-  { id: 5, idioma: "Francés" },
+  { id: 4, idioma: "Francés" },
+  { id: 5, idioma: "Alemán" },
 ];
 
 const niveles = [
   { id: 1, nivel: "Inicial" },
   { id: 2, nivel: "Intermedio" },
-  { id: 3, nivel: "Avanzado" },
-  { id: 4, nivel: "Nativo" },
+  { id: 3, nivel: "Avanzado" }
 ];
 
+
+
 const DatosAcademicos = () => {
-  const idUsuario = sessionStorage.getItem("idUsuario");
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const token = sessionStorage.getItem("token");
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+  const datosUsuario = (encryptStorage.getItem("datosUsuario"));
 
   const [validarErrores, setValidarErrores] = useState({}); // Para controlar los errores
   const [isSubmitting, setIsSubmitting] = useState(false); // Para validar el formulario
   const [edit, setEdit] = useState(false); // Para habilitar los campos de edición
   const isFieldDisabled = !edit;
-  const [carreras, setCarreras] = useState([]);
   const [estudios, setEstudios] = useState([]);
   const [aptitudes, setAptitudes] = useState([]);
   const [aptitudesElegidas, setAptitudesElegidas] = useState([]);
   const [preferencias, setPreferencias] = useState([]);
   const [preferenciasElegidas, setPreferenciasElegidas] = useState([]);
-  const [idiomasElegidos, setIdiomasElegidos] = useState([]);
+  const [idiomaSeleccionado, setIdiomaSeleccionado] = useState(null);
+  const [nivelSeleccionado, setNivelSeleccionado] = useState(null);
+  const [idiomasPostulante, setIdiomasPostulante] = useState([]);
+  const [habilidadSeleccionada, setHabilidadSeleccionada] = useState(null);
+  const [habilidadesPostulante, setHabilidadesPostulante] = useState([]);
+  const [habilidades, setHabilidades] = useState([]);
   const [usuario, setUsuario] = useState({
     carrera: "",
-    fk_id_carrera: "",
     estudios: "",
     fk_id_estudios: "",
     cant_materias: "",
@@ -89,14 +98,16 @@ const DatosAcademicos = () => {
   }, [idUsuario]);
 
   useEffect(() => {
-    const getCarrerasData = async () => {
-      const response = await getCarreras();
-      setCarreras(response.carreras);
-    };
+    
     const getEstudiosData = async () => {
       const response = await getEstudios();
-      setEstudios(response.estudios);
+      setEstudios(response);
     };
+    const getIdiomasData = async () => {
+      const response = await getIdiomasPostulante(datosUsuario.id);
+      setIdiomasPostulante(response);
+    }
+
     const getAptitudesData = async () => {
       const response = await getAptitudes();
       setAptitudes(response.aptitudes);
@@ -105,10 +116,22 @@ const DatosAcademicos = () => {
       const response = await getPreferencias();
       setPreferencias(response.preferencias);
     };
+
+    const getHabilidadesData = async () => {
+      const response = await getHabilidadesPostulante(datosUsuario.id);
+      setHabilidadesPostulante(response);
+    };
+
+    const traerHabilidades = async () => {
+      const response = await getHabilidades();
+      setHabilidades(response.aptitudes);
+    };
+    
     getEstudiosData();
-    getCarrerasData();
-    getAptitudesData();
-    getPreferenciasData();
+    getIdiomasData();
+    traerHabilidades()
+    getHabilidadesData();
+
   }, []);
 
   const handleEdit = () => {
@@ -116,110 +139,92 @@ const DatosAcademicos = () => {
     setIsSubmitting(false);
   };
 
-  const handleChangeAptitudes = (event) => {
-    setAptitudesElegidas(event.target.value);
+
+
+  const handleIdiomaSeleccionado = (event) => {
+    setIdiomaSeleccionado(event.target.value);
   };
 
-  const agregarNuevasAptitudes = async (aptitudes) => {
-    const apt = [
-      ...aptitudesElegidas.map((aptitud) => ({
-        id: aptitudes.find((apt) => apt.nombre_aptitud === aptitud).id,
-      })),
-    ];
-    const response = await agregarAptitudes(datosUsuario.id, apt);
-    if (response) {
-      toast.success("Aptitudes agregadas con éxito");
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } else {
-      toast.error("Error al agregar las aptitudes");
-    }
+  const handleNivelSeleccionado = (event) => {
+    setNivelSeleccionado(event.target.value);
   };
 
-  const handleChangePreferencias = (event) => {
-    setPreferenciasElegidas(event.target.value);
+  const handleHabilidadSeleccionada = (event) => {
+    setHabilidadSeleccionada(event.target.value);
   };
 
-  const agregarNuevasPreferencias = async (preferencias) => {
-    const pref = [
-      ...preferenciasElegidas.map((preferencia) => ({
-        id: preferencias.find((pref) => pref.nombre_preferencia === preferencia)
-          .id,
-      })),
-    ];
-    const response = await agregarPreferencias(datosUsuario.id, pref);
-    if (response) {
-      toast.success("Preferencias agregadas con éxito");
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } else {
-      toast.error("Error al agregar las preferencias");
-    }
-  };
 
-  const agregarNuevoIdioma = () => {
-    setIdiomasElegidos([
-      ...idiomasElegidos,
-      {
-        nombre_idioma: "",
-        nivel_oral: "",
-        nivel_escrito: "",
-      },
-    ]);
-  };
 
-  const handleIdiomaChange = (e, index) => {
-    const { value } = e.target;
-    setIdiomasElegidos((prevIdiomas) => {
-      const nuevosIdiomas = [...prevIdiomas];
-      nuevosIdiomas[index] = { ...nuevosIdiomas[index], nombre_idioma: value };
-      return nuevosIdiomas;
-    });
-  };
-
-  const handleNivelOralChange = (e, index) => {
-    const { value } = e.target;
-    setIdiomasElegidos((prevIdiomas) => {
-      const nuevosIdiomas = [...prevIdiomas];
-      nuevosIdiomas[index] = { ...nuevosIdiomas[index], nivel_oral: value };
-      return nuevosIdiomas;
-    });
-  };
-
-  const handleNivelEscritoChange = (e, index) => {
-    const { value } = e.target;
-    setIdiomasElegidos((prevIdiomas) => {
-      const nuevosIdiomas = [...prevIdiomas];
-      nuevosIdiomas[index] = { ...nuevosIdiomas[index], nivel_escrito: value };
-      return nuevosIdiomas;
-    });
-  };
-
-  const handleEliminarIdioma = async (e, index) => {
-    e.preventDefault();
-    const response = await eliminarIdioma(usuario.Idiomas[index].id);
-
+  const handleDeleteIdioma = async (id) => {
+    const response = await deleteIdioma(id);
     if (response) {
       toast.success("Idioma eliminado con éxito");
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 2000);
     } else {
       toast.error("Error al eliminar el idioma");
     }
   };
 
-  const handleDescartarIdioma = (index) => {
-    return () => {
-      setIdiomasElegidos((prevIdiomas) => {
-        const nuevosIdiomas = [...prevIdiomas];
-        nuevosIdiomas.splice(index, 1);
-        return nuevosIdiomas;
-      });
-    };
+  const handleDeleteHabilidad = async (id) => {
+    const response = await deleteHabilidad(id);
+    if (response) {
+      toast.success("Habilidad eliminada con éxito");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      toast.error("Error al eliminar la habilidad");
+    }
   };
+
+  const handleAgregarIdioma = async () => {
+
+    if (idiomasPostulante.length < 4) {
+      const response = await postIdiomasPostulantes(
+        datosUsuario.id,
+        idiomaSeleccionado,
+        nivelSeleccionado
+      );
+      if (response) {
+        toast.success("Idioma agregado con éxito");
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error("Error al agregar el idioma");
+      }
+    } else {
+      toast.error("No se pueden agregar más de 4 idiomas");
+    }
+  };
+
+  const handleAgregarHabilidad = async () => {
+    if (habilidadesPostulante.length < 4) {
+      const response = await postHabilidadesPostulantes(
+        datosUsuario.id,
+        habilidadSeleccionada
+      );
+      if (response) {
+        toast.success("Habilidad agregada con éxito");
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error("Error al agregar la habilidad");
+      }
+    }
+    else {
+      toast.error("No se pueden agregar más de 4 habilidades");
+    }
+  };
+  const cancelarEdicion = () => {
+    setEdit(false);
+    setIsSubmitting(false);
+  };
+
+
 
   const handleSave = () => {
     schema
@@ -227,33 +232,28 @@ const DatosAcademicos = () => {
       .then(async () => {
         const datosActualizados = {
           carrera: usuario.carrera,
-          fk_id_carrera: usuario.fk_id_carrera,
-          estudios: usuario.estudios,
-          fk_id_estudios: usuario.fk_id_estudios,
+          estudios: usuario.fk_id_estudios,
           cantMaterias: usuario.cant_materias,
-          cant_materias: usuario.cant_materias,
-          alumno_unahur: usuario.alumno_unahur,
           alumnoUnahur: usuario.alumno_unahur,
         };
+
 
         const response = await putPostulante(
           usuario.id,
           datosActualizados,
           token
         );
-        const responseIdiomas = await agregarIdiomas(
-          datosUsuario.id,
-          idiomasElegidos
-        );
 
-        if (response && responseIdiomas) {
+        
+
+        if (response || responseIdiomas) {
           setEdit(false);
           setUsuario(datosActualizados);
           setIsSubmitting(false);
           toast.success("Datos actualizados con éxito");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+         // setTimeout(() => {
+          //  window.location.reload();
+          //}, 1500);
         } else {
           toast.error("Error al actualizar los datos");
         }
@@ -273,7 +273,6 @@ const DatosAcademicos = () => {
 
   const schema = yup.object().shape({
     carrera: yup.string(),
-    fk_id_carrera: yup.string(),
     estudios: yup.string(),
     fk_id_estudios: yup.string(),
     cant_materias: yup
@@ -296,13 +295,12 @@ const DatosAcademicos = () => {
                 label="Carrera"
                 variant="outlined"
                 value={
-                  carreras.find(
-                    (carrera) => carrera.id === usuario.fk_id_carrera
-                  )?.id || ""
+                  usuario.carrera === null
+                    ? ""
+                    : usuario.carrera || ""
                 }
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                select
                 disabled={isFieldDisabled}
                 sx={{
                   "& .MuiInputBase-input.Mui-disabled": {
@@ -315,24 +313,19 @@ const DatosAcademicos = () => {
                 onChange={(e) => {
                   setUsuario({
                     ...usuario,
-                    carrera: e.target.value,
-                    fk_id_carrera: e.target.value,
+                    carrera:
+                      e.target.value === "" ? null : e.target.value,
                   });
                 }}
-                error={Boolean(validarErrores.fk_id_carrera)}
+                error={Boolean(validarErrores.carrera)}
                 helperText={
-                  isSubmitting && validarErrores.fk_id_carrera
-                    ? validarErrores.fk_id_carrera
+                  isSubmitting && validarErrores.carrera
+                    ? validarErrores.carrera
                     : ""
                 }
-              >
-                <MenuItem value="">Selecciona una carrera</MenuItem>
-                {carreras.map((carrera) => (
-                  <MenuItem key={carrera.id} value={carrera.id}>
-                    {carrera.nombre_carrera}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
+                
+              
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
               <TextField
@@ -372,7 +365,7 @@ const DatosAcademicos = () => {
                 <MenuItem value="">Selecciona un nivel académico</MenuItem>
                 {estudios.map((estudio) => (
                   <MenuItem key={estudio.id} value={estudio.id}>
-                    {estudio.nombre_estudio_estado}
+                    {estudio.nombre_estudio} {estudio.estado_estudio}
                   </MenuItem>
                 ))}
               </TextField>
@@ -416,7 +409,7 @@ const DatosAcademicos = () => {
               <TextField
                 select
                 fullWidth
-                label="¿Es alumno UNAHUR"
+                label="¿Es estudiante de UNAHUR?"
                 variant="outlined"
                 value={
                   usuario.alumno_unahur === null
@@ -456,413 +449,170 @@ const DatosAcademicos = () => {
               <Typography variant="h5" gutterBottom>
                 Idiomas
               </Typography>
-              <Grid container spacing={2} paddingY={2}>
-                {usuario.Idiomas?.map((idioma, index) => (
-                  <Fragment key={index}>
-                    <Grid
-                      item
-                      xs={12}
-                      sm={isFieldDisabled ? 4 : 3}
-                      md={isFieldDisabled ? 4 : 3}
-                    >
-                      <TextField
+              <Box>
+                {idiomasPostulante.map((idioma) => (
+                  <Chip 
+                    key={idioma.id} 
+                    label={idioma.Idioma.nombre_idioma + " " + idioma.Nivel.nivel} 
+                    color="success"
+                    onDelete={edit ? () => handleDeleteIdioma(idioma.id) : undefined}
+                  />
+                ))}
+              </Box>
+              {edit && (
+                <Grid container spacing={2} paddingY={1}>
+
+                  <Grid item xs={12} sm={4} md={4}>
+                    <FormControl sx={{ width: "100%"}}>
+                      <TextField 
                         select
                         label="Idioma"
                         variant="outlined"
-                        fullWidth
-                        disabled={isFieldDisabled}
-                        sx={{
-                          "& .MuiInputBase-input.Mui-disabled": {
-                            WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                          },
-                          "&& .MuiFormLabel-root.Mui-disabled": {
-                            color: "rgba(0, 0, 0, 0.80)",
-                          },
-                        }}
-                        value={
-                          idioma["Idiomas del postulante"].nombre_idioma || ""
+                        value={idiomaSeleccionado || ""}
+                        onChange={handleIdiomaSeleccionado}
+                        error={Boolean(validarErrores.idioma)}
+                        helperText={
+                          isSubmitting && validarErrores.idioma
+                            ? validarErrores.idioma
+                            : ""
                         }
-                        onChange={(e) => handleIdiomaChange(e, index)}
+                        
                       >
                         <MenuItem value="" disabled>
                           Selecciona un idioma
                         </MenuItem>
                         {idiomas.map((idioma) => (
-                          <MenuItem key={idioma.id} value={idioma.idioma}>
+                          <MenuItem key={idioma.id} value={idioma.id}>
                             {idioma.idioma}
                           </MenuItem>
                         ))}
                       </TextField>
-                    </Grid>
-                    <Grid
-                      item
-                      xs={12}
-                      sm={isFieldDisabled ? 4 : 3}
-                      md={isFieldDisabled ? 4 : 3}
-                    >
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={4}>
+                    <FormControl sx={{ width: "100%" }}>
                       <TextField
                         select
-                        label="Nivel oral"
+                        label="Nivel"
                         variant="outlined"
-                        fullWidth
-                        disabled={isFieldDisabled}
-                        sx={{
-                          "& .MuiInputBase-input.Mui-disabled": {
-                            WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                          },
-                          "&& .MuiFormLabel-root.Mui-disabled": {
-                            color: "rgba(0, 0, 0, 0.80)",
-                          },
-                        }}
-                        value={
-                          idioma["Idiomas del postulante"].nivel_oral || ""
+                        value={nivelSeleccionado || ""}
+                        onChange={handleNivelSeleccionado}
+                        error={Boolean(validarErrores.nivel)}
+                        helperText={
+                          isSubmitting && validarErrores.nivel
+                            ? validarErrores.nivel
+                            : ""
                         }
-                        onChange={(e) => handleNivelOralChange(e, index)}
+                        
                       >
                         <MenuItem value="" disabled>
-                          Selecciona un nivel oral
+                          Selecciona un nivel
                         </MenuItem>
                         {niveles.map((nivel) => (
-                          <MenuItem key={nivel.id} value={nivel.nivel}>
+                          <MenuItem key={nivel.id} value={nivel.id}>
                             {nivel.nivel}
                           </MenuItem>
                         ))}
                       </TextField>
-                    </Grid>
-                    <Grid
-                      item
-                      xs={12}
-                      sm={isFieldDisabled ? 4 : 3}
-                      md={isFieldDisabled ? 4 : 3}
+                    </FormControl>
+                    
+                  </Grid>
+                    
+                  <Grid item xs={12} sm={4} md={4}>
+                    <Button
+                      disableElevation
+                      variant="contained"
+                      onClick={handleAgregarIdioma}
+                      sx={{ marginTop: 1 }}
+                      disabled={!idiomaSeleccionado || !nivelSeleccionado}
                     >
-                      <TextField
-                        select
-                        label="Nivel escrito"
-                        variant="outlined"
-                        fullWidth
-                        disabled={isFieldDisabled}
-                        sx={{
-                          "& .MuiInputBase-input.Mui-disabled": {
-                            WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                          },
-                          "&& .MuiFormLabel-root.Mui-disabled": {
-                            color: "rgba(0, 0, 0, 0.80)",
-                          },
-                        }}
-                        value={
-                          idioma["Idiomas del postulante"].nivel_escrito || ""
-                        }
-                        onChange={(e) => handleNivelEscritoChange(e, index)}
-                      >
-                        <MenuItem value="" disabled>
-                          Selecciona un nivel escrito
-                        </MenuItem>
-                        {niveles.map((nivel) => (
-                          <MenuItem key={nivel.id} value={nivel.nivel}>
-                            {nivel.nivel}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                    {edit && (
-                      <Grid item xs={12} sm={3} md={3}>
-                        <Button
-                          disableElevation
-                          variant="outlined"
-                          color="error"
-                          sx={{ marginTop: 1 }}
-                          fullWidth
-                          onClick={(e) => handleEliminarIdioma(e, index)}
-                        >
-                          Eliminar idioma
-                        </Button>
-                      </Grid>
-                    )}
-                  </Fragment>
+                      Agregar idioma
+                    </Button>
+                  </Grid>
+                </Grid>
+           )}
+           
+            
+            </Grid>
+            <Grid item xs={12} sm={12} md={12}>
+              <Typography variant="h5" gutterBottom>
+                Habilidades
+              </Typography>
+              <Box>
+                {habilidadesPostulante.map((habilidad) => (
+                  <Chip 
+                    key={habilidad.id} 
+                    label={habilidad.Aptitud.nombre_aptitud} 
+                    color="primary"
+                    onDelete={edit ? () => handleDeleteHabilidad(habilidad.id) : undefined}
+                  />
                 ))}
-                {edit &&
-                  idiomasElegidos.map((idiomaElegido, index) => (
-                    <Fragment key={index}>
-                      <Grid
-                        item
-                        xs={12}
-                        sm={isFieldDisabled ? 4 : 3}
-                        md={isFieldDisabled ? 4 : 3}
-                      >
-                        <TextField
-                          select
-                          label="Idioma"
-                          variant="outlined"
-                          fullWidth
-                          disabled={isFieldDisabled}
-                          sx={{
-                            "& .MuiInputBase-input.Mui-disabled": {
-                              WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                            },
-                            "&& .MuiFormLabel-root.Mui-disabled": {
-                              color: "rgba(0, 0, 0, 0.80)",
-                            },
-                          }}
-                          value={idiomaElegido.nombre_idioma || ""}
-                          onChange={(e) => handleIdiomaChange(e, index)}
-                        >
-                          <MenuItem value="" disabled>
-                            Selecciona un idioma
-                          </MenuItem>
-                          {idiomas.map((idioma) => (
-                            <MenuItem key={idioma.id} value={idioma.idioma}>
-                              {idioma.idioma}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        sm={isFieldDisabled ? 4 : 3}
-                        md={isFieldDisabled ? 4 : 3}
-                      >
-                        <TextField
-                          select
-                          label="Nivel oral"
-                          variant="outlined"
-                          fullWidth
-                          disabled={isFieldDisabled}
-                          sx={{
-                            "& .MuiInputBase-input.Mui-disabled": {
-                              WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                            },
-                            "&& .MuiFormLabel-root.Mui-disabled": {
-                              color: "rgba(0, 0, 0, 0.80)",
-                            },
-                          }}
-                          value={idiomaElegido.nivel_oral || ""}
-                          onChange={(e) => handleNivelOralChange(e, index)}
-                        >
-                          <MenuItem value="" disabled>
-                            Selecciona un nivel oral
-                          </MenuItem>
-                          {niveles.map((nivel) => (
-                            <MenuItem key={nivel.id} value={nivel.nivel}>
-                              {nivel.nivel}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        sm={isFieldDisabled ? 4 : 3}
-                        md={isFieldDisabled ? 4 : 3}
-                      >
-                        <TextField
-                          select
-                          label="Nivel escrito"
-                          variant="outlined"
-                          fullWidth
-                          disabled={isFieldDisabled}
-                          sx={{
-                            "& .MuiInputBase-input.Mui-disabled": {
-                              WebkitTextFillColor: "rgba(0, 0, 0, 0.80)",
-                            },
-                            "&& .MuiFormLabel-root.Mui-disabled": {
-                              color: "rgba(0, 0, 0, 0.80)",
-                            },
-                          }}
-                          value={idiomaElegido.nivel_escrito || ""}
-                          onChange={(e) => handleNivelEscritoChange(e, index)}
-                        >
-                          <MenuItem value="" disabled>
-                            Selecciona un nivel escrito
-                          </MenuItem>
-                          {niveles.map((nivel) => (
-                            <MenuItem key={nivel.id} value={nivel.nivel}>
-                              {nivel.nivel}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
-                      <Grid item xs={12} sm={3} md={3}>
-                        <Button
-                          disableElevation
-                          variant="outlined"
-                          color="error"
-                          sx={{ marginTop: 1 }}
-                          fullWidth
-                          onClick={handleDescartarIdioma(index)}
-                        >
-                          Eliminar idioma
-                        </Button>
-                      </Grid>
-                    </Fragment>
-                  ))}
-              </Grid>
+              </Box>
+              {edit && (
+                <Grid container spacing={2} paddingY={1}>
 
-              {edit && (
-                <Button
-                  disableElevation
-                  variant="contained"
-                  onClick={agregarNuevoIdioma}
-                  sx={{ marginTop: 1 }}
-                >
-                  Agregar nuevo idioma
-                </Button>
-              )}
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
-              <Typography variant="h5" gutterBottom>
-                Aptitudes
-              </Typography>
-              <Grid container spacing={2} paddingY={1}>
-                <Grid item xs={12} sm={4} md={4}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <AptitudesPostulante
-                      edit={edit}
-                      aptitudes={usuario?.Aptitudes}
-                    />
-                    {edit && (
-                      <>
-                        <Select
-                          labelId="aptitudes-chip-label"
-                          id="aptitudes-chip"
-                          multiple
-                          value={aptitudesElegidas || []}
-                          onChange={handleChangeAptitudes}
-                          input={
-                            <OutlinedInput
-                              id="select-aptitudes-chip"
-                              label="Aptitudes"
-                            />
-                          }
-                          renderValue={(selected) => (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 0.5,
-                              }}
-                            >
-                              {selected.map((value) => (
-                                <Chip key={value} label={value} />
-                              ))}
-                            </Box>
-                          )}
-                        >
-                          <MenuItem value="" disabled>
-                            Selecciona una aptitud
+                  <Grid item xs={12} sm={4} md={4}>
+                    <FormControl sx={{ width: "100%"}}>
+                      <TextField 
+                        select
+                        label="Habilidades"
+                        variant="outlined"
+                        value={habilidadSeleccionada || ""}
+                        onChange={handleHabilidadSeleccionada}
+                        error={Boolean(validarErrores.habilidad)}
+                        helperText={
+                          isSubmitting && validarErrores.habilidad
+                            ? validarErrores.habilidad
+                            : ""
+                        }
+                        
+                      >
+                        <MenuItem value="" disabled>
+                          Selecciona una habilidad
+                        </MenuItem>
+                        {habilidades.map((habilidad) => (
+                          <MenuItem key={habilidad.id} value={habilidad.id}>
+                            {habilidad.nombre_aptitud}
                           </MenuItem>
-                          {aptitudes
-                            .filter(
-                              (aptitud) =>
-                                !usuario.Aptitudes.find(
-                                  (apt) =>
-                                    apt["Aptitudes del postulante"].id ===
-                                    aptitud.id
-                                )
-                            )
-                            .map((aptitud) => (
-                              <MenuItem
-                                key={aptitud.id}
-                                value={aptitud.nombre_aptitud}
-                              >
-                                {aptitud.nombre_aptitud}
-                              </MenuItem>
-                            ))}
-                        </Select>
-                      </>
-                    )}
-                  </FormControl>
+                        ))}
+                      </TextField>
+                    </FormControl>
+                  </Grid>
+                 
+                    
+                  <Grid item xs={12} sm={4} md={4}>
+                    <Button
+                      disableElevation
+                      variant="contained"
+                      onClick={handleAgregarHabilidad}
+                      sx={{ marginTop: 1 }}
+                      disabled={!habilidadSeleccionada}
+                    >
+                      Agregar habilidad
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Grid>
-              {edit && (
-                <Button
-                  disableElevation
-                  variant="contained"
-                  onClick={() => agregarNuevasAptitudes(aptitudes)}
-                  sx={{ marginTop: 1 }}
-                >
-                  Agregar aptitudes
-                </Button>
-              )}
+           )}
+           
+            
             </Grid>
+            
             <Grid item xs={12} sm={12} md={12}>
-              <Typography variant="h5" gutterBottom>
-                Preferencias
-              </Typography>
-              <Grid container spacing={2} paddingY={1}>
-                <Grid item xs={12} sm={4} md={4}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <PreferenciasPostulante
-                      edit={edit}
-                      preferencias={usuario?.Preferencias}
-                    />
-                    {edit && (
-                      <>
-                        <Select
-                          labelId="preferencias-chip-label"
-                          id="preferencias-chip"
-                          multiple
-                          value={preferenciasElegidas || []}
-                          onChange={handleChangePreferencias}
-                          input={
-                            <OutlinedInput
-                              id="select-preferencias-chip"
-                              label="Preferencias"
-                            />
-                          }
-                          renderValue={(selected) => (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 0.5,
-                              }}
-                            >
-                              {selected.map((value) => (
-                                <Chip key={value} label={value} />
-                              ))}
-                            </Box>
-                          )}
-                        >
-                          <MenuItem value="" disabled>
-                            Selecciona una preferencia
-                          </MenuItem>
-                          {preferencias
-                            .filter(
-                              (preferencia) =>
-                                !usuario.Preferencias.find(
-                                  (pref) =>
-                                    pref["Preferencias del postulante"].id ===
-                                    preferencia.id
-                                )
-                            )
-                            .map((preferencia) => (
-                              <MenuItem
-                                key={preferencia.id}
-                                value={preferencia.nombre_preferencia}
-                              >
-                                {preferencia.nombre_preferencia}
-                              </MenuItem>
-                            ))}
-                        </Select>
-                      </>
-                    )}
-                  </FormControl>
-                </Grid>
-              </Grid>
-
-              {edit && (
-                <Button
-                  disableElevation
-                  variant="contained"
-                  onClick={() => agregarNuevasPreferencias(preferencias)}
-                  sx={{ marginTop: 1 }}
-                >
-                  Agregar preferencias
-                </Button>
-              )}
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
+              {
+                edit && (
+                  <Button
+                    disableElevation
+                    variant="outlined"
+                    onClick={cancelarEdicion}
+                    color="error"
+                    sx={{
+                      float: "left",
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )
+              }
               <Button
                 disableElevation
                 variant="contained"
@@ -881,6 +631,6 @@ const DatosAcademicos = () => {
       <Toaster richColors closeButton />
     </Card>
   );
-};
+}
 
 export default DatosAcademicos;

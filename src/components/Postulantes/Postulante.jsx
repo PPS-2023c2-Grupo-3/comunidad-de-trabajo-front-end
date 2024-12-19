@@ -27,13 +27,18 @@ import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import LanguageIcon from "@mui/icons-material/Language";
 import AccessibilityIcon from "@mui/icons-material/Accessibility";
 import TranslateIcon from "@mui/icons-material/Translate";
-
+import { getIdiomasPostulante } from "../../services/idiomasPostulantes_service";
+import { getExperienciaLaboral } from "../../services/experienciaLaboral_service";
 import { getPostulanteByDni } from "../../services/postulantes_service";
+import { getHabilidadesPostulante } from "../../services/habilidadesPostulante_service";
 
 const Postulante = () => {
   const idPostulante = parseInt(window.location.pathname.split("/")[2]);
 
   const [postulante, setPostulante] = useState({});
+  const [idiomasPostulante, setIdiomasPostulante] = useState([]);
+  const [experienciaLaboral, setExperienciaLaboral] = useState([]);
+  const [habilidadesPostulante, setHabilidadesPostulante] = useState([]);
   const isLoading = Object.keys(postulante).length === 0;
 
   useEffect(() => {
@@ -45,7 +50,38 @@ const Postulante = () => {
         console.log(error);
       }
     };
+
+    const traerIdiomasPostulante = async () => {
+      try {
+        const response = await getIdiomasPostulante(idPostulante);
+        setIdiomasPostulante(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const traerExperienciaLaboral = async () => {
+      try {
+        const response = await getExperienciaLaboral(idPostulante);
+        setExperienciaLaboral(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    
+    const traerHabilidadesPostulante = async () => {
+      try {
+        const response = await getHabilidadesPostulante(idPostulante);
+        setHabilidadesPostulante(response);
+      } catch (error) {
+        console.log(error)
+      }
+    };
+
     traerPostulante();
+    traerIdiomasPostulante();
+    traerExperienciaLaboral();
+    traerHabilidadesPostulante();
   }, [idPostulante]);
 
   useEffect(() => {
@@ -66,19 +102,74 @@ const Postulante = () => {
     return edad;
   };
 
-  const formatoFecha = (fecha) => {
-    // dia/mes/año
-    const fechaNacimiento = new Date(fecha);
-    let dia = fechaNacimiento.getDate() + 1;
-    let mes = fechaNacimiento.getMonth() + 1;
-    const año = fechaNacimiento.getFullYear();
-    if (dia < 10) {
-      dia = "0" + dia;
+  const convertirFecha = (fecha) => {
+    const fechaDate = new Date(fecha);
+    fechaDate.setDate(fechaDate.getDate() + 1);
+    return fechaDate.toLocaleDateString();
+}
+
+  const calcularTiempo = (fechaInicio, fechaFin) => {
+    const fechaInicioDate = new Date(fechaInicio);
+    const fechaFinDate = new Date(fechaFin);
+    let años = fechaFinDate.getFullYear() - fechaInicioDate.getFullYear();
+    let meses = fechaFinDate.getMonth() - fechaInicioDate.getMonth();
+    if (meses < 0) {
+      años--;
+      meses = 12 + meses;
     }
-    if (mes < 10) {
-      mes = "0" + mes;
+    if (años === 0) {
+      if (meses === 1) {
+        return meses + " mes";
+      } else {
+        return meses + " meses";
+      }
+    } else {
+      if (meses === 0) {
+        return años + " años";
+      } else {
+        if (años === 1) {
+          return años + " año y " + meses + " meses";
+        } else {
+          return años + " años y " + meses + " meses";
+        }
+      }
     }
-    return dia + "/" + mes + "/" + año;
+  }
+
+  const acortarLink = (link) => {
+    let linkAcortado = link;
+    if (link.length > 30) {
+      linkAcortado = link.slice(0, 30) + "...";
+    }
+    return linkAcortado;
+  }
+
+  // Crea una función que reciba un nombre y apellido y devuelva las iniciales, y un color de fondo aleatorio
+  const iniciales = (nombre, apellido) => {
+    const iniciales = nombre.charAt(0) + apellido.charAt(0);
+    const colores = [
+      "#f44336",
+      "#e91e63",
+      "#9c27b0",
+      "#673ab7",
+      "#3f51b5",
+      "#2196f3",
+      "#03a9f4",
+      "#00bcd4",
+      "#009688",
+      "#4caf50",
+      "#8bc34a",
+      "#cddc39",
+      "#ffeb3b",
+      "#ffc107",
+      "#ff9800",
+      "#ff5722",
+      "#795548",
+      "#9e9e9e",
+      "#607d8b",
+    ];
+    const color = colores[Math.floor(Math.random() * colores.length)];
+    return { iniciales, color };
   };
 
   return (
@@ -121,7 +212,7 @@ const Postulante = () => {
             </>
           ) : (
             <>
-              <Avatar
+              {postulante.foto ? <Avatar
                 src={postulante.foto}
                 alt={postulante.nombre + " " + postulante.apellido}
                 sx={{
@@ -135,7 +226,30 @@ const Postulante = () => {
                     sm: "block",
                   },
                 }}
-              />
+              /> : <Avatar
+                sx={{
+                  position: "absolute",
+                  right: "2rem",
+                  top: "2rem",
+                  alignContent: "center",
+                  width: 150,
+                  height: 150,
+                  display: {
+                    xs: "none",
+                    sm: "block",
+                  },
+                  backgroundColor: iniciales(postulante.nombre, postulante.apellido).color,
+                }}
+              >
+                <Typography sx={{
+                  fontSize: "4rem",
+                  fontWeight: "bold",
+                  color: "#fff",
+                  textAlign: "center",
+                  
+                }}>{iniciales(postulante.nombre, postulante.apellido).iniciales}</Typography>
+              </Avatar>
+                }
               <CardHeader
                 title={postulante.nombre + " " + postulante.apellido}
                 subheader={calcularEdad(postulante.fecha_nac) + " años"}
@@ -195,8 +309,8 @@ const Postulante = () => {
               <>
                 <Typography
                   variant="h5"
-                  color="primary"
-                  sx={{ marginTop: "1rem" }}
+                  sx={{color: "#006982",marginTop: "1rem" }}
+                  
                 >
                   Datos personales
                 </Typography>
@@ -212,11 +326,9 @@ const Postulante = () => {
                 >
                   <ListItem>
                     <EmailOutlinedIcon
-                      color="primary"
+                      sx={{color: "#006982", marginRight: "0.5rem"}}
                       fontSize="large"
-                      sx={{
-                        marginRight: "0.5rem",
-                      }}
+
                     />
                     <ListItemText
                       primary={postulante.Usuario?.usuario}
@@ -225,11 +337,9 @@ const Postulante = () => {
                   </ListItem>
                   <ListItem>
                     <LocalPhoneOutlinedIcon
-                      color="primary"
+                      sx={{color: "#006982", marginRight: "0.5rem"}}
                       fontSize="large"
-                      sx={{
-                        marginRight: "0.5rem",
-                      }}
+                      
                     />
                     <ListItemText
                       primary={postulante.telefono}
@@ -239,11 +349,9 @@ const Postulante = () => {
                   {postulante.segundoTelefono && (
                     <ListItem>
                       <LocalPhoneOutlinedIcon
-                        color="primary"
+                        sx={{color: "#006982", marginRight: "0.5rem"}}
                         fontSize="large"
-                        sx={{
-                          marginRight: "0.5rem",
-                        }}
+                        
                       />
                       <ListItemText
                         primary={postulante.segundoTelefono}
@@ -253,24 +361,20 @@ const Postulante = () => {
                   )}
                   <ListItem>
                     <CalendarMonth
-                      color="primary"
+                      sx={{color: "#006982", marginRight: "0.5rem"}}
                       fontSize="large"
-                      sx={{
-                        marginRight: "0.5rem",
-                      }}
+                      
                     />
                     <ListItemText
-                      primary={formatoFecha(postulante.fecha_nac)}
+                      primary={convertirFecha(postulante.fecha_nac)}
                       secondary="Fecha de nacimiento"
                     />
                   </ListItem>
                   <ListItem>
                     <LocationOnOutlinedIcon
-                      color="primary"
+                      sx={{color: "#006982", marginRight: "0.5rem"}}
                       fontSize="large"
-                      sx={{
-                        marginRight: "0.5rem",
-                      }}
+                     
                     />
                     <ListItemText
                       primary={
@@ -283,11 +387,9 @@ const Postulante = () => {
                   </ListItem>
                   <ListItem>
                     <MarkunreadMailboxOutlinedIcon
-                      color="primary"
+                      sx={{color: "#006982", marginRight: "0.5rem"}}
                       fontSize="large"
-                      sx={{
-                        marginRight: "0.5rem",
-                      }}
+                      
                     />
                     <ListItemText
                       primary={postulante.cp}
@@ -297,11 +399,9 @@ const Postulante = () => {
                   {postulante.genero && (
                     <ListItem>
                       <TransgenderIcon
-                        color="primary"
+                        sx={{color: "#006982", marginRight: "0.5rem"}}
                         fontSize="large"
-                        sx={{
-                          marginRight: "0.5rem",
-                        }}
+                        
                       />
                       <ListItemText
                         primary={postulante.genero}
@@ -312,11 +412,9 @@ const Postulante = () => {
                   {postulante.linkedIn && (
                     <ListItem>
                       <LinkedInIcon
-                        color="primary"
+                        sx={{color: "#006982", marginRight: "0.5rem"}}
                         fontSize="large"
-                        sx={{
-                          marginRight: "0.5rem",
-                        }}
+                        
                       />
                       <ListItemText
                         primary={
@@ -335,11 +433,9 @@ const Postulante = () => {
                   {postulante.portfolio && (
                     <ListItem>
                       <LanguageIcon
-                        color="primary"
+                        sx={{color: "#006982", marginRight: "0.5rem"}}
                         fontSize="large"
-                        sx={{
-                          marginRight: "0.5rem",
-                        }}
+                        
                       />
                       <ListItemText
                         primary={
@@ -347,16 +443,9 @@ const Postulante = () => {
                             href={postulante.portfolio}
                             target="_blank"
                             rel="noreferrer"
+                            style={{ textDecoration: "none", color:"#00708a"}}
                           >
-                            {postulante.portfolio
-                              .split("/")[2]
-                              .split(".")[0]
-                              .charAt(0)
-                              .toUpperCase() +
-                              postulante.portfolio
-                                .split("/")[2]
-                                .split(".")[0]
-                                .slice(1)}
+                            {acortarLink(postulante.portfolio)}
                           </a>
                         }
                         secondary="Portfolio o red social"
@@ -366,11 +455,9 @@ const Postulante = () => {
                   {postulante.discapacidad && (
                     <ListItem>
                       <AccessibilityIcon
-                        color="primary"
+                        sx={{color: "#006982", marginRight: "0.5rem"}}
                         fontSize="large"
-                        sx={{
-                          marginRight: "0.5rem",
-                        }}
+
                       />
                       <ListItemText
                         primary={postulante.discapacidad}
@@ -384,8 +471,8 @@ const Postulante = () => {
                     <Grid item xs={12} sm={12}>
                       <Typography
                         variant="h5"
-                        color="primary"
-                        sx={{ marginTop: "1rem" }}
+                        sx={{color: "#006982", marginTop: "1rem"}}
+                        
                       >
                         Presentación
                       </Typography>
@@ -401,8 +488,8 @@ const Postulante = () => {
                 <Divider sx={{ marginTop: "1rem" }} />
                 <Typography
                   variant="h5"
-                  color="primary"
-                  sx={{ marginTop: "1rem" }}
+                  sx={{color: "#006982", marginTop: "1rem"}}
+                
                 >
                   Datos académicos
                 </Typography>
@@ -418,13 +505,13 @@ const Postulante = () => {
                 >
                   <ListItem>
                     <ListItemText
-                      primary={postulante.Estudios?.nombre_estudio_estado}
+                      primary= {postulante.Estudios?.nombre_estudio + " " + postulante.Estudios?.estado_estudio}
                       secondary="Estudios"
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
-                      primary={postulante.Carrera?.nombre_carrera}
+                      primary={postulante.carrera}
                       secondary="Carrera"
                     />
                   </ListItem>
@@ -437,114 +524,101 @@ const Postulante = () => {
                   <ListItem>
                     <ListItemText
                       primary={postulante.alumno_unahur ? "Si" : "No"}
-                      secondary="¿Es alumno de la UNAHUR?"
+                      secondary="¿Es estudiante de la UNAHUR?"
                     />
                   </ListItem>
                 </List>
-                {postulante.Idiomas?.length > 0 && (
+                {idiomasPostulante?.length > 0 && (
                   <>
                     <Divider sx={{ marginTop: "1rem" }} />
                     <Typography
                       variant="h5"
-                      color="primary"
-                      sx={{ marginTop: "1rem" }}
+                      sx={{color: "#006982", marginTop: "1rem"}}
+                      
                     >
                       Idiomas
                     </Typography>
                     <Grid container spacing={2}>
-                      {postulante.Idiomas?.map((idioma, index) => (
-                        <Grid item key={index} xs={12} sm={6}>
-                          <Card
-                            variant="outlined"
-                            sx={{ marginTop: "1rem", position: "relative" }}
-                          >
-                            <CardContent>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  marginBottom: "1rem",
-                                }}
-                              >
-                                {idioma["Idiomas del postulante"].nombre_idioma}
-                              </Typography>
-                              <Typography>
-                                Nivel escrito:{" "}
-                                {idioma["Idiomas del postulante"].nivel_escrito}
-                              </Typography>
-                              <Typography>
-                                Nivel oral:{" "}
-                                {idioma["Idiomas del postulante"].nivel_oral}
-                              </Typography>
-                              <TranslateIcon
-                                color="primary"
-                                sx={{
-                                  position: "absolute",
-                                  top: {
-                                    xs: "25%",
-                                    sm: "50%",
-                                  },
-                                  right: "2rem",
-                                  transform: "translateY(-50%)",
-                                }}
+                      {idiomasPostulante.map(idioma => (
+                        <Grid item key={idioma.id}>
+                          <Chip
+                            label={idioma.Idioma.nombre_idioma + " - " + idioma.Nivel.nivel}
+                            icon={<TranslateIcon />}
+                            sx={{ marginRight: "0.5rem" }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </>
+                )}
+
+                
+
+                {habilidadesPostulante?.length > 0 && (
+                  <>
+                    <Divider sx={{ marginTop: "1rem" }} />
+                    <Typography
+                      variant="h5"
+                      sx={{color: "#006982", marginTop: "1rem"}}
+                   
+                    >
+                      Habilidades
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {habilidadesPostulante.map(habilidad => (
+                        <Grid item key={habilidad.id}>
+                          <Chip
+                            label={habilidad.Aptitud.nombre_aptitud}
+                            icon={<AccessibilityIcon />}
+                            sx={{ marginRight: "0.5rem" }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </>
+                )}
+
+                {
+                  experienciaLaboral.length > 0 && (
+                    <>
+                      <Divider sx={{ marginTop: "1rem" }} />
+                      <Typography
+                        variant="h5"
+                        sx={{color: "#006982", marginTop: "1rem"}}
+                        
+                      >
+                        Experiencia laboral
+                      </Typography>
+                      <List>
+                        {experienciaLaboral.map( experiencia => (
+                          <ListItem key={experiencia.id}>
+                            <Box sx={{ display: "flex", flexDirection:"column"}}>
+                              <ListItemText
+                                primary={experiencia.puesto}
+                                secondary={experiencia.empresa}
                               />
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </>
-                )}
+                              <Typography
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{  }}
+                              >
+                                {convertirFecha(experiencia.fecha_inicio) +
+                                  " - " +
+                                  convertirFecha(experiencia.fecha_fin) + " ("  +  calcularTiempo(experiencia.fecha_inicio, experiencia.fecha_fin) +")"} 
+                              </Typography>
+                              
+                              <Typography variant="body1" color="textPrimary" sx={{  }}>
+                                {experiencia.descripcion}
+                              </Typography>
+                            
 
-                {postulante.Aptitudes?.length > 0 && (
-                  <>
-                    <Divider sx={{ marginTop: "1rem" }} />
-                    <Typography
-                      variant="h5"
-                      color="primary"
-                      sx={{ marginTop: "1rem" }}
-                    >
-                      Aptitudes
-                    </Typography>
-                    <Grid container spacing={1} sx={{ marginTop: "0.5rem" }}>
-                      {postulante.Aptitudes?.map((aptitud, index) => (
-                        <Grid item key={index}>
-                          <Chip
-                            label={
-                              aptitud["Aptitudes del postulante"].nombre_aptitud
-                            }
-                            sx={{ marginRight: "0.5rem" }}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </>
-                )}
-
-                {postulante.Preferencias?.length > 0 && (
-                  <>
-                    <Divider sx={{ marginTop: "1rem" }} />
-                    <Typography
-                      variant="h5"
-                      color="primary"
-                      sx={{ marginTop: "1rem" }}
-                    >
-                      Preferencias
-                    </Typography>
-                    <Grid container spacing={1} sx={{ marginTop: "0.5rem" }}>
-                      {postulante.Preferencias?.map((preferencia, index) => (
-                        <Grid item key={index}>
-                          <Chip
-                            label={
-                              preferencia["Preferencias del postulante"]
-                                .nombre_preferencia
-                            }
-                            sx={{ marginRight: "0.5rem" }}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </>
-                )}
+                            </Box>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )
+                }
               </>
             )}
           </CardContent>

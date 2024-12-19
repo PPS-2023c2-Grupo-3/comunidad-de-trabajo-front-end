@@ -9,12 +9,19 @@ import Tooltip from "@mui/material/Tooltip";
 import Logout from "@mui/icons-material/Logout";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import { useState } from "react";
+import { EncryptStorage } from 'encrypt-storage';
+
 
 export default function IconUser() {
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  const usuarioData = JSON.parse(sessionStorage.getItem("datosUsuario")) || "";
-  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
+  const usuarioData = encryptStorage.getItem("datosUsuario") || "";
+  const tipoUsuario = encryptStorage.getItem("tipoUsuario");
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -24,11 +31,11 @@ export default function IconUser() {
   };
 
   const handleCerrarSesion = () => {
-    sessionStorage.setItem("estaLogueado", "false");
-    sessionStorage.removeItem("tipoUsuario");
-    sessionStorage.removeItem("datosUsuario");
+    encryptStorage.setItem("estaLogueado", "false");
+    encryptStorage.removeItem("tipoUsuario");
+    encryptStorage.removeItem("datosUsuario");
     sessionStorage.removeItem("token");
-    sessionStorage.removeItem("idUsuario");
+    encryptStorage.removeItem("idUsuario");
     window.location.href = "/";
   };
 
@@ -56,7 +63,7 @@ export default function IconUser() {
                   : tipoUsuario === "empresa"
                   ? usuarioData.logo
                   : tipoUsuario === "admin"
-                  ? "https://cdn.discordapp.com/attachments/955646153297395722/1046571441262432257/hurlingham.png"
+                  ? "https://unahur.edu.ar/wp-content/uploads/2018/07/articles_vinc.jpg"
                   : ""
               }
             />

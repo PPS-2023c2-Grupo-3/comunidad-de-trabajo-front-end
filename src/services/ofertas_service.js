@@ -1,5 +1,6 @@
 import axios from "axios";
 import { config } from "../config/config";
+import { toast } from "sonner";
 
 // Trae todas las ofertas con filtros
 
@@ -12,11 +13,25 @@ export async function getOfertas(
 ) {
   try {
     const response = await axios.get(
-      `${config.apiUrl}/ofertas/?pagina=${pagina}&limite=${limite}10&ordenar=${ordenar}&buscarTitulo=${buscarTitulo}&estado=${estado}`
+      `${config.apiUrl}/ofertas/?pagina=${pagina}&limite=${limite}&ordenar=${ordenar}&buscarTitulo=${buscarTitulo}&idEstado=${estado}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        sessionStorage.clear();
+      }, 3000);
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -24,10 +39,23 @@ export async function getOfertas(
 
 export async function getOfertasSinFiltros() {
   try {
-    const response = await axios.get(`${config.apiUrl}/ofertas/all`);
+    const response = await axios.get(`${config.apiUrl}/ofertas`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
+    ) 
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -36,11 +64,23 @@ export async function getOfertasSinFiltros() {
 export async function getOfertaById(id) {
   try {
     const response = await axios.get(
-      `${config.apiUrl}/ofertas/individual/${id}`
+      `${config.apiUrl}/ofertas/idOferta/${id}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -49,11 +89,23 @@ export async function getOfertaById(id) {
 export async function getOfertaByCuit(pagina, limite, cuit, buscarTitulo) {
   try {
     const response = await axios.get(
-      `${config.apiUrl}/ofertas/cuit/${cuit}?pagina=${pagina}&limite=${limite}&buscarTitulo=${buscarTitulo}`
+      `${config.apiUrl}/ofertas/cuit/${cuit}?pagina=${pagina}&limite=${limite}&buscarTitulo=${buscarTitulo}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -69,11 +121,23 @@ export async function getOfertasPorFiltrosRecomendados(
 ) {
   try {
     const response = await axios.get(
-      `${config.apiUrl}/ofertas/recomendado/?pagina=${pagina}&limite=${limite}&buscarTitulo=${buscarTitulo}&ordenar=${ordenar}&estado=${estado}&id=${idUsuario}`
-    );
+      `${config.apiUrl}/ofertas/?pagina=${pagina}&limite=${limite}&buscarTitulo=${buscarTitulo}&ordenar=${ordenar}&estado=${estado}&id=${idUsuario}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
+    )
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -83,11 +147,23 @@ export async function postOferta(oferta, token) {
   try {
     const response = await axios.post(
       `${config.apiUrl}/ofertas/?authorization=${token}`,
-      oferta
+      oferta,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -97,11 +173,23 @@ export async function putOferta(idOferta, oferta, token) {
   try {
     const response = await axios.put(
       `${config.apiUrl}/ofertas/idOferta/${idOferta}?authorization=${token}`,
-      oferta
+      oferta,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }
 
@@ -110,10 +198,22 @@ export async function putOferta(idOferta, oferta, token) {
 export async function deleteOferta(idOferta, token) {
   try {
     const response = await axios.delete(
-      `${config.apiUrl}/ofertas/idOferta/${idOferta}?authorization=${token}`
+      `${config.apiUrl}/ofertas/idOferta/${idOferta}?authorization=${token}`,
+      {
+        headers: {
+          Authorization: `bearer ${sessionStorage.getItem("token")}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
     console.error(error);
+    if (error.response.status === 401) {
+      sessionStorage.clear();
+      toast.error("Su sesión ha expirado, por favor vuelva a iniciar sesión");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 5000);
+    }
   }
 }

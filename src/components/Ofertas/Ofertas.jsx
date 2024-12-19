@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Avatar,
+  Box,
   Button,
   Card,
   CardActions,
@@ -9,7 +10,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-
+import { EncryptStorage } from 'encrypt-storage';
 import {
   getOfertas,
   getOfertaByCuit,
@@ -17,69 +18,106 @@ import {
 } from "../../services/ofertas_service";
 import { getPostulacionesPorIdPostulante } from "../../services/postulacionesId_service";
 import PropTypes from "prop-types";
+import Spinner from "../Template/Spinner";
 
 const Ofertas = (props) => {
-  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
-  const idUsuario = sessionStorage.getItem("idUsuario");
+
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const tipoUsuario = encryptStorage.getItem("tipoUsuario");
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const { ofertas, setOfertas, paginaActual, setTotalPaginas } = props;
   const scrollRef = useRef({});
   const nombreBusqueda = window.location.search.split("=")[1] || "";
 
   const [postulaciones, setPostulaciones] = useState([]);
   const limite = 12;
+  const [loading, setLoading] = useState(true);
+
+
+  const removeFbclid = (url) => {
+    if (url.includes("fbclid")) {
+      const urlSplit = url.split("?");
+      const urlSinFbclid = urlSplit[0];
+      window.history.replaceState({}, document.title, urlSinFbclid);
+    };
+  };
+  
+
+
+
+
 
   useEffect(() => {
-    const traerOfertas = async () => {
-      let response;
-      if (tipoUsuario === "empresa") {
-        response = await getOfertaByCuit(
-          paginaActual - 1,
-          limite,
-          datosUsuario.id,
-          nombreBusqueda
-        );
-      } else if (tipoUsuario === "postulante") {
-        response = await getOfertasPorFiltrosRecomendados(
-          paginaActual - 1,
-          limite,
-          nombreBusqueda,
-          "id",
-          "Activa",
-          idUsuario
-        );
-      } else {
-        response = await getOfertas(
-          paginaActual - 1,
-          limite,
-          nombreBusqueda,
-          "id",
-          "Activa"
-        );
-      }
-      if (tipoUsuario === "postulante") {
-        const ofertasFiltradas = response.ofertas.rows.filter((oferta) => {
-          return !postulaciones.some(
-            (postulacion) => postulacion.fk_id_oferta === oferta.id
+
+    if (tipoUsuario === "empresa") {
+      const traerOfertas = async () => {
+        try {
+          const response = await getOfertaByCuit(
+            paginaActual - 1,
+            limite,
+            datosUsuario.id,
+            nombreBusqueda
           );
-        });
-        setTotalPaginas(response.totalPaginas);
-        setOfertas(ofertasFiltradas);
-      } else {
-        setOfertas(response.ofertas.rows);
-        setTotalPaginas(response.totalPaginas);
+          setOfertas(response.ofertas.rows);
+          setTotalPaginas(response.totalPaginas);
+          setLoading(false);
+        } catch (error) {
+          console.log(error);
+        }
       }
-    };
-    traerOfertas();
-  }, [
-    setOfertas,
-    nombreBusqueda,
-    tipoUsuario,
-    datosUsuario?.id,
-    postulaciones,
-    setTotalPaginas,
-    paginaActual,
-  ]);
+      traerOfertas();
+    }
+    else if (tipoUsuario === "postulante") {
+      const traerOfertas = async () => {
+        try {
+          const response = await getOfertasPorFiltrosRecomendados(
+            paginaActual - 1,
+            limite,
+            nombreBusqueda,
+            "id",
+            1,
+            idUsuario
+          );
+          setOfertas(response.ofertas.rows);
+          setTotalPaginas(response.totalPaginas);
+          setLoading(false);
+
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      traerOfertas();
+    }
+    else {
+      const traerOfertas = async () => {
+        try {
+          removeFbclid(window.location.href);
+          const response = await getOfertas(
+            paginaActual - 1,
+            limite,
+            nombreBusqueda,
+            "id",
+            1,
+          );
+          setOfertas(response.ofertas.rows);
+          setTotalPaginas(response.totalPaginas);
+          setLoading(false);
+
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      traerOfertas();
+    }
+  }, [tipoUsuario, datosUsuario?.cuit, paginaActual, nombreBusqueda]);
+
+
 
   useEffect(() => {
     if (tipoUsuario === "postulante") {
@@ -103,12 +141,20 @@ const Ofertas = (props) => {
   const publicadoHace = (fecha) => {
     const fechaPublicacion = new Date(fecha);
     const fechaActual = new Date();
-    const diferencia = fechaActual.getTime() - fechaPublicacion.getTime();
+    const diferencia = fechaActual - fechaPublicacion;
     const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
-    return dias;
+    const horas = Math.floor(diferencia / (1000 * 60 * 60));
+    const minutos = Math.floor(diferencia / (1000 * 60));
+
+    if (dias > 0) {
+      return dias === 1 ? "1 día" : `${dias} días`;
+    } else if (horas > 0) {
+      return horas === 1 ? "1 hora" : `${horas} horas`;
+    }
+    return minutos === 1 ? "1 minuto" : `${minutos} minutos`;
   };
 
-  return (
+  return (  loading ? <Spinner/> :
     <Grid
       container
       spacing={4}
@@ -140,7 +186,7 @@ const Ofertas = (props) => {
         </Grid>
       )}
 
-      {ofertas.map((oferta, index) => (
+      { ofertas.map((oferta, index) => (
         <Grid xs={12} md={6} lg={4} xl={3} item key={index}>
           <Card
             variant="outlined"
@@ -154,16 +200,19 @@ const Ofertas = (props) => {
             }}
           >
             <CardHeader
-              avatar={
+              avatar={oferta.Empresa.logo?
                 <Avatar
                   src={oferta.Empresa?.logo}
                   alt={oferta.Empresa?.nombre_empresa}
-                />
+                />: <Avatar
+                      alt={oferta.Empresa?.nombre_empresa}
+                      sx={{ backgroundColor: "#00404f" }}
+                    >
+                      {oferta.Empresa?.nombre_empresa.charAt(0)}
+                    </Avatar>
               }
-              title={oferta.titulo_oferta}
-              subheader={`Publicado hace ${publicadoHace(
-                oferta.createdAt
-              )} días`}
+              title={oferta.Empresa?.nombre_empresa}
+              subheader={oferta.zona_trabajo}
               sx={{
                 "& .css-et1ao3-MuiTypography-root": {
                   fontSize: "1.4rem",
@@ -178,10 +227,10 @@ const Ofertas = (props) => {
             />
             <CardContent>
               <Typography variant="h6">
-                {oferta.Empresa?.nombre_empresa}
+                {oferta.titulo_oferta}
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {oferta.zona_trabajo}
+                Publicado hace {publicadoHace(oferta.createdAt)}
               </Typography>
               <Typography
                 variant="body2"
@@ -208,7 +257,7 @@ const Ofertas = (props) => {
                 justifyContent: "center",
               }}
             >
-              <Button variant="contained" href={`/oferta/${oferta.id}`}>
+              <Button variant="contained" sx={{backgroundColor:"#00404f"}} href={`/oferta/${oferta.id}`}>
                 Ver oferta
               </Button>
             </CardActions>

@@ -3,6 +3,8 @@ import Header from "../Header/Header";
 import Ofertas from "../Ofertas/Ofertas.jsx";
 import { useState } from "react";
 import Paginacion from "../Paginacion/Paginacion";
+import Footer from "../Footer/Footer.jsx";
+import CarouselBootstrap from "./Carousel/CarouselBootstrap.jsx";
 
 const Inicio = () => {
   const [ofertas, setOfertas] = useState([]);
@@ -13,6 +15,7 @@ const Inicio = () => {
     <>
       <CssBaseline />
       <Header setOfertas={setOfertas} />
+      <CarouselBootstrap />
       <Ofertas
         ofertas={ofertas}
         setOfertas={setOfertas}
@@ -24,6 +27,7 @@ const Inicio = () => {
         totalPaginas={totalPaginas}
         cambiarPagina={setPaginaActual}
       />
+      <Footer />
     </>
   );
 };

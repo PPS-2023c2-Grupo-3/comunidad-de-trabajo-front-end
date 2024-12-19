@@ -19,7 +19,7 @@ export default function RegistroPostulante() {
     idUsuario: idUsuario,
     estudios: null,
     carrera: "",
-    estado: "",
+    estado: 1,
     nombre: "",
     apellido: "",
     nacionalidad: "",
@@ -74,8 +74,8 @@ export default function RegistroPostulante() {
       .integer("El teléfono debe ser un número entero")
       .positive("El teléfono debe ser un número positivo")
       .max(9999999999, "El teléfono debe tener como máximo 10 dígitos"),
-    presentacion: yup.string().optional(),
-    genero: yup.string().optional(),
+    presentacion: yup.string().required("Campo requerido").max(255, "Máximo 255 caracteres"),
+    genero: yup.string().required("Campo requerido"),
     discapacidad: yup.string().optional().nullable(),
     linkedIn: yup.string().optional().url("Debe ser una URL válida"),
     portfolio: yup.string().optional().url("Debe ser una URL válida"),
@@ -136,7 +136,7 @@ export default function RegistroPostulante() {
         toast.success("Tu cuenta fue creada con éxito");
         setTimeout(() => {
           window.location.href = "/login";
-        }, 5000);
+        }, 1000);
       } else {
         toast.error("Hubo un error al crear tu cuenta");
       }
@@ -155,7 +155,6 @@ export default function RegistroPostulante() {
 
   return (
     <>
-      {/* <Header /> */}
       <Registro
         steps={steps}
         getStepContent={getStepContent}
@@ -164,7 +163,6 @@ export default function RegistroPostulante() {
         schema={schemaDatosPersonales}
         setValidarErrores={setValidarErroresDatosPersonales}
       />
-      ;
     </>
   );
 }

@@ -14,10 +14,10 @@ import SaveIcon from "@mui/icons-material/Save";
 
 import { useEffect, useState } from "react";
 import { getEstudios } from "../../services/estudios_service";
-import { getCarreras } from "../../services/carreras_service";
 import { getJornadas } from "../../services/jornadas_service";
 import { getTiposContratos } from "../../services/contratos_service";
 import { getOfertaById, putOferta } from "../../services/ofertas_service";
+import { getRubrosOfertas } from "../../services/rubros_ofertas_service";
 
 import * as yup from "yup";
 
@@ -45,9 +45,9 @@ const EdicionOferta = () => {
 
   const [validarErrores, setValidarErrores] = useState({}); // Para controlar los errores
   const [estudios, setEstudios] = useState([]);
-  const [carreras, setCarreras] = useState([]);
   const [jornadas, setJornadas] = useState([]);
   const [contratos, setContratos] = useState([]);
+  const [rubrosOfertas, setRubrosOfertas] = useState([]);
 
   const [oferta, setOferta] = useState({
     tituloOferta: "",
@@ -64,21 +64,16 @@ const EdicionOferta = () => {
     beneficios: "",
     remuneracion: null,
     idEstudio: "",
-    idCarrera: "",
+    carrera: "",
     idJornada: "",
     idContrato: "",
     modalidadDeTrabajo: "",
-    tareasARealizar: "",
   });
 
   useEffect(() => {
     const fetchEstudios = async () => {
       const response = await getEstudios();
-      setEstudios(response.estudios);
-    };
-    const fetchCarreras = async () => {
-      const response = await getCarreras();
-      setCarreras(response.carreras);
+      setEstudios(response);
     };
     const fetchJornadas = async () => {
       const response = await getJornadas();
@@ -86,12 +81,16 @@ const EdicionOferta = () => {
     };
     const fetchContratos = async () => {
       const response = await getTiposContratos();
-      setContratos(response.contratos);
+      setContratos(response);
+    };
+    const fetchRubrosOfertas = async () => {
+      const response = await getRubrosOfertas();
+      setRubrosOfertas(response);
     };
     fetchEstudios();
-    fetchCarreras();
     fetchJornadas();
     fetchContratos();
+    fetchRubrosOfertas();
   }, []);
 
   useEffect(() => {
@@ -109,17 +108,18 @@ const EdicionOferta = () => {
         edadDesde: response.edad_desde,
         edadHasta: response.edad_hasta,
         experienciaPreviaDesc: response.experiencia_previa_desc,
+        idRubroOferta: response.fk_id_rubro_oferta,
         zonaTrabajo: response.zona_trabajo,
         areasEstudio: response.areas_estudio,
         otrosDetalles: response.otros_detalles,
         beneficios: response.beneficios,
         remuneracion: response.remuneracion,
         idEstudio: response.fk_id_estudio,
-        idCarrera: response.fk_id_carrera,
+        carrera: response.carrera,
         idJornada: response.fk_id_jornada,
         idContrato: response.fk_id_contrato,
         modalidadDeTrabajo: response.modalidadDeTrabajo,
-        tareasARealizar: response.tareasARealizar,
+        idEstado: 2
       });
     };
     fetchOferta();
@@ -158,7 +158,7 @@ const EdicionOferta = () => {
       .required("La experiencia previa es obligatoria"),
     zonaTrabajo: yup.string().required("La zona de trabajo es obligatoria"),
     areasEstudio: yup.string().required("El área de estudio es obligatoria"),
-    otrosDetalles: yup.string().optional(),
+    otrosDetalles: yup.string().required("Las tareas a realizar son obligatorias"),
     beneficios: yup.string().optional(),
     remuneracion: yup
       .number()
@@ -167,11 +167,10 @@ const EdicionOferta = () => {
       .integer("La remuneración debe ser un número entero")
       .nullable(),
     idEstudio: yup.string().required("El estudio es obligatorio"),
-    idCarrera: yup.string().required("La carrera es obligatoria"),
+    carrera: yup.string().required("La carrera es obligatoria"),
     idJornada: yup.string().required("La jornada es obligatoria"),
     idContrato: yup.string().required("El contrato es obligatorio"),
     modalidadDeTrabajo: yup.string().required("La modalidad es obligatoria"),
-    tareasARealizar: yup.string().required("Las tareas son obligatorias"),
   });
 
   const handleSubmit = async () => {
@@ -246,21 +245,7 @@ const EdicionOferta = () => {
                     helperText={validarErrores.descripcion}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Fecha de vigencia"
-                    InputLabelProps={{ shrink: true }}
-                    type="date"
-                    variant="outlined"
-                    value={oferta.fechaVigencia || ""}
-                    onChange={(e) => {
-                      setOferta({ ...oferta, fechaVigencia: e.target.value });
-                    }}
-                    error={Boolean(validarErrores.fechaVigencia)}
-                    helperText={validarErrores.fechaVigencia}
-                  />
-                </Grid>
+                
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
                     label="Horario laboral (desde)"
@@ -322,6 +307,22 @@ const EdicionOferta = () => {
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
                     fullWidth
+                    label="Fecha de vigencia"
+                    InputLabelProps={{ shrink: true }}
+                    type="date"
+                    variant="outlined"
+                    value={oferta.fechaVigencia || ""}
+                    onChange={(e) => {
+                      setOferta({ ...oferta, fechaVigencia: e.target.value });
+                    }}
+                    error={Boolean(validarErrores.fechaVigencia)}
+                    helperText={validarErrores.fechaVigencia}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={6}>
+                  <TextField
+                    fullWidth
+                    multiline
                     label="Experiencia previa"
                     variant="outlined"
                     value={oferta.experienciaPreviaDesc || ""}
@@ -334,6 +335,29 @@ const EdicionOferta = () => {
                     error={Boolean(validarErrores.experienciaPreviaDesc)}
                     helperText={validarErrores.experienciaPreviaDesc}
                   />
+                </Grid>
+                <Grid item xs={12} sm={6} md={6}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Rubro"
+                    variant="outlined"
+                    value={oferta.idRubroOferta || ""}
+                    onChange={(e) => {
+                      setOferta({
+                        ...oferta,
+                        idRubroOferta: e.target.value,
+                      });
+                    }}
+                    error={Boolean(validarErrores.idRubroOferta)}
+                    helperText={validarErrores.idRubroOferta}
+                  >
+                    {rubrosOfertas.map((rubro) => (
+                      <MenuItem key={rubro.id} value={rubro.id}>
+                        {rubro.nombre}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
@@ -354,6 +378,7 @@ const EdicionOferta = () => {
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
                     fullWidth
+                    multiline
                     label="Area de estudio"
                     variant="outlined"
                     value={oferta.areasEstudio || ""}
@@ -370,7 +395,8 @@ const EdicionOferta = () => {
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
                     fullWidth
-                    label="Otros detalles"
+                    multiline
+                    label="Tareas a realizar"
                     variant="outlined"
                     value={oferta.otrosDetalles || ""}
                     onChange={(e) => {
@@ -386,6 +412,7 @@ const EdicionOferta = () => {
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
                     fullWidth
+                    multiline
                     label="Beneficios"
                     variant="outlined"
                     value={oferta.beneficios || ""}
@@ -433,33 +460,23 @@ const EdicionOferta = () => {
                   >
                     {estudios.map((estudio) => (
                       <MenuItem key={estudio.id} value={estudio.id}>
-                        {estudio.nombre_estudio_estado}
+                        {estudio.nombre_estudio} {estudio.estado_estudio}
                       </MenuItem>
                     ))}
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
-                    select
                     fullWidth
                     label="Carrera"
                     variant="outlined"
-                    value={oferta.idCarrera || ""}
+                    value={oferta.carrera || ""}
                     onChange={(e) => {
-                      setOferta({
-                        ...oferta,
-                        idCarrera: e.target.value,
-                      });
+                      setOferta({ ...oferta, carrera: e.target.value });
                     }}
-                    error={Boolean(validarErrores.idCarrera)}
-                    helperText={validarErrores.idCarrera}
-                  >
-                    {carreras.map((carrera) => (
-                      <MenuItem key={carrera.id} value={carrera.id}>
-                        {carrera.nombre_carrera}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    error={Boolean(validarErrores.carrera)}
+                    helperText={validarErrores.carrera}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
                   <TextField
@@ -530,23 +547,7 @@ const EdicionOferta = () => {
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Tareas a realizar"
-                    variant="outlined"
-                    value={oferta.tareasARealizar || ""}
-                    multiline
-                    onChange={(e) => {
-                      setOferta({
-                        ...oferta,
-                        tareasARealizar: e.target.value,
-                      });
-                    }}
-                    error={Boolean(validarErrores.tareasARealizar)}
-                    helperText={validarErrores.tareasARealizar}
-                  />
-                </Grid>
+                
 
                 <Grid item xs={12} sm={12} md={12}>
                   <Button

@@ -99,7 +99,7 @@ const BaseUNAHUR = () => {
                       href={postulante.cv}
                       target="_blank"
                       sx={{
-                        color: "green",
+                        color: "#cb3234",
                         "&:hover": {
                           backgroundColor: "lightgrey",
                           color: "black",
@@ -115,12 +115,12 @@ const BaseUNAHUR = () => {
                     variant="outlined"
                     sx={{
                       margin: 1,
-                      color: "green",
-                      borderColor: "green",
+                      color: "#28a745",
+                      borderColor: "#28a745",
                       "&:hover": {
                         backgroundColor: "lightgrey",
                         color: "black",
-                        borderColor: "green",
+                        borderColor: "#28a745",
                       },
                     }}
                     href={`/postulante/${postulante.id}`}

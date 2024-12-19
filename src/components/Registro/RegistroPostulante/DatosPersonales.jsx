@@ -1,4 +1,4 @@
-import { MenuItem, Grid, TextField, Typography } from "@mui/material";
+import { MenuItem, Grid, TextField, Typography, Tooltip } from "@mui/material";
 
 import PropTypes from "prop-types";
 
@@ -24,6 +24,7 @@ export default function DatosPersonales({
   const [tiposDocumentos, setTiposDocumentos] = useState([]);
   const [provincias, setProvincias] = useState([]);
   const [ciudades, setCiudades] = useState([]);
+  const [generos, setGeneros] = useState(["Masculino", "Femenino", "X", "Prefiero no decirlo"]);
 
   useEffect(() => {
     async function fetchData() {
@@ -307,22 +308,27 @@ export default function DatosPersonales({
         </Grid>
         <Grid item xs={12} sm={4}>
           <TextField
+            select
+            required
             label="Género"
             id="genero"
             name="genero"
             variant="outlined"
             fullWidth
             value={postulante.genero || ""}
-            InputLabelProps={{
-              shrink: postulante.genero ? true : false,
-            }}
-            multiline
             onChange={(e) => handleChange(e)}
             error={Boolean(validarErrores.genero)}
             helperText={validarErrores.genero ? validarErrores.genero : ""}
-          />
+          >
+            <MenuItem value="">Selecciona un género</MenuItem>
+            {generos.map((genero) => (
+              <MenuItem key={genero} value={genero}>
+                {genero}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        {/*<Grid item xs={12} sm={4}>
           <TextField
             label="Discapacidad"
             id="discapacidad"
@@ -355,7 +361,7 @@ export default function DatosPersonales({
             error={Boolean(validarErrores.linkedIn)}
             helperText={validarErrores.linkedIn ? validarErrores.linkedIn : ""}
           />
-        </Grid>
+          </Grid>*/}
         <Grid item xs={12} sm={4}>
           <TextField
             label="Portfolio o red social"
@@ -373,6 +379,11 @@ export default function DatosPersonales({
               validarErrores.portfolio ? validarErrores.portfolio : ""
             }
           />
+          <Tooltip>
+            <Typography variant="caption" color="textSecondary">
+              Link de tu portfolio o red social (LinkedIn, Github, Behance, etc.)
+            </Typography>
+          </Tooltip>
         </Grid>
         <Grid item xs={12} sm={4}>
           <TextField
@@ -391,7 +402,12 @@ export default function DatosPersonales({
             helperText={
               validarErrores.presentacion ? validarErrores.presentacion : ""
             }
-          />
+          /> 
+          <Tooltip>
+            <Typography variant="caption" color="textSecondary">
+              Breve descripción de tu perfil y/o link de presentacion audiovisual (Máximo 255 caracteres)
+            </Typography>
+          </Tooltip>
         </Grid>
       </Grid>
     </>

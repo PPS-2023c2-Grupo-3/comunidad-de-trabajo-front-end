@@ -1,0 +1,30 @@
+services:
+  frontend:
+    container_name: bolsadetrabajo-frontend
+    restart: unless-stopped
+    image: bolsadetrabajo-frontend:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - VITE_PORT=${VITE_PORT}
+        - NODE_ENV=production
+
+    ports:
+      - "${VITE_PORT}:${VITE_PORT}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    networks:
+      api_network:
+        ipv4_address: 172.19.0.5
+networks:
+  api_network:
+      external: true
+      driver: bridge
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.19.0.0/24

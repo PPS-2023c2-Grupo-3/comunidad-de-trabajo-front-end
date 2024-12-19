@@ -35,25 +35,33 @@ import { getOfertaById } from "../../services/ofertas_service";
 import { postPostulacion } from "../../services/postulaciones_service";
 
 import { Toaster, toast } from "sonner";
-
+import { EncryptStorage } from "encrypt-storage";
 // import PreferenciasOferta from "./PreferenciasOferta";
 import { getPostulacionesPorIdPostulante } from "../../services/postulacionesId_service";
+import Footer from "../Footer/Footer";
+import Spinner from "../Template/Spinner";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
 
 const Oferta = () => {
-  const estaLogueado = sessionStorage.getItem("estaLogueado");
-  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
-  const token = sessionStorage.getItem("token");
 
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
+  const estaLogueado = encryptStorage.getItem("estaLogueado");
+  const tipoUsuario = encryptStorage.getItem("tipoUsuario");
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
+  const token = sessionStorage.getItem("token");
   const idOferta = parseInt(window.location.pathname.split("/")[2]);
   const [oferta, setOferta] = useState({});
   const [open, setOpen] = useState(false);
   const [postulaciones, setPostulaciones] = useState([]);
-  const isLoading = Object.keys(oferta).length === 0;
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -69,6 +77,7 @@ const Oferta = () => {
       }
     };
     traerOferta();
+    setIsLoading(false);
   }, [idOferta]);
 
   useEffect(() => {
@@ -87,19 +96,30 @@ const Oferta = () => {
         }
       };
       traerPostulaciones();
+      setIsLoading(false);
+
     }
   }, [tipoUsuario, datosUsuario?.id]);
 
   const publicadoHace = (fecha) => {
     const fechaPublicacion = new Date(fecha);
     const fechaActual = new Date();
-    const diferencia = fechaActual.getTime() - fechaPublicacion.getTime();
+    const diferencia = fechaActual - fechaPublicacion;
     const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
-    return dias;
+    const horas = Math.floor(diferencia / (1000 * 60 * 60));
+    const minutos = Math.floor(diferencia / (1000 * 60));
+
+    if (dias > 0) {
+      return dias === 1 ? "1 día" : `${dias} días`;
+    } else if (horas > 0) {
+      return horas === 1 ? "1 hora" : `${horas} horas`;
+    }
+    return minutos === 1 ? "1 minuto" : `${minutos} minutos`;
   };
 
+
   const handleClickOpen = () => {
-    estaLogueado === "true" ? setOpen(true) : (window.location.href = "/login");
+    estaLogueado ? setOpen(true) : (window.location.href = "/login");
   };
 
   const handleClose = () => {
@@ -107,8 +127,8 @@ const Oferta = () => {
   };
 
   const handlePostularme = async () => {
-    if (estaLogueado === "true") {
-      if (tipoUsuario === "postulante") {
+    if (estaLogueado) {
+      if (tipoUsuario === "postulante" && datosUsuario.cv !== "") {
         const postulacion = {
           postulante: datosUsuario.id,
           oferta: oferta.id,
@@ -119,15 +139,19 @@ const Oferta = () => {
           if (response) {
             toast.success("Postulación exitosa");
             setTimeout(() => {
-              window.location.href = "/";
-            }, 1500);
+              window.location.reload();
+            }, 200);
           }
         } catch (error) {
-          console.log(error);
-          toast.error("Error al postularse");
+          console.log(error);        
         }
+      } else if (tipoUsuario === "postulante" && datosUsuario.cv === "") {
+        toast.error("Para postularte a una oferta, primero debes cargar tu CV");
+        setTimeout(() => {
+          window.location.href = "/perfil?section=curriculumVitae";
+        }, 2000);
       }
-    } else {
+      } else {
       window.location.href = "/login";
     }
   };
@@ -139,6 +163,7 @@ const Oferta = () => {
   return (
     <>
       <Header />
+      {isLoading ? <Spinner /> :
       <Container
         maxWidth="md"
         sx={{
@@ -263,7 +288,7 @@ const Oferta = () => {
                       marginRight: "0.5rem",
                     }}
                   />
-                  Publicado hace {publicadoHace(oferta.createdAt)} días
+                  Publicado hace {publicadoHace(oferta.createdAt)}
                 </Typography>
                 <Typography
                   variant="h6"
@@ -293,12 +318,21 @@ const Oferta = () => {
                     <ListItemText primary={oferta.descripcion} />
                   </ListItem>
                   <ListItem>
+                    <ListItemText primary={
+                      <>
+                        Rubro:
+                        <br />
+                        {oferta.RubroOferta?.nombre || "No especificado"}
+                      </>
+                    } />
+                  </ListItem>
+                  <ListItem>
                     <ListItemText
                       primary={
                         <>
                           Tareas a realizar:
                           <br />
-                          {oferta.tareasARealizar || "No especificado"}
+                          {oferta.otros_detalles || "No especificado"}
                         </>
                       }
                     />
@@ -342,7 +376,7 @@ const Oferta = () => {
                     <ListItemText
                       primary={
                         "Estudios mínimos: " +
-                        oferta.Estudio?.nombre_estudio_estado
+                        oferta.Estudio?.nombre_estudio
                       }
                     />
                   </ListItem>
@@ -350,7 +384,7 @@ const Oferta = () => {
                     <ListItemText
                       primary={
                         "Carrera: " +
-                        (oferta.Carrera?.nombre_carrera || "No especificado")
+                        (oferta.carrera || "No especificado")
                       }
                     />
                   </ListItem>
@@ -374,7 +408,7 @@ const Oferta = () => {
                     />
                   </ListItem>
                 </List>
-                {oferta.Aptitudes?.length > 0 && (
+                {/*oferta.Aptitudes?.length > 0 && (
                   <>
                     <Divider sx={{ marginTop: "1rem" }} />
                     <Typography
@@ -397,8 +431,8 @@ const Oferta = () => {
                       ))}
                     </Grid>
                   </>
-                )}
-                {oferta.Preferencias?.length > 0 && (
+                )*/}
+                {/*oferta.Preferencias?.length > 0 && (
                   <>
                     <Divider sx={{ marginTop: "1rem" }} />
                     <Typography
@@ -422,7 +456,7 @@ const Oferta = () => {
                       ))}
                     </Grid>
                   </>
-                )}
+                )*/}
                 <Divider sx={{ marginTop: "1rem" }} />
                 <Typography
                   variant="h6"
@@ -515,7 +549,7 @@ const Oferta = () => {
                       }}
                     />
                     <ListItemText
-                      primary={oferta.modalidadDeTrabajo || "No especificado"}
+                      primary={oferta.modalidad_de_trabajo || "No especificado"}
                       secondary="Modalidad de trabajo"
                     />
                   </ListItem>
@@ -537,7 +571,7 @@ const Oferta = () => {
               }}
             />
           ) : (
-            <Button
+           tipoUsuario === "admin" ? null : <Button
               variant="contained"
               color="primary"
               onClick={
@@ -575,6 +609,7 @@ const Oferta = () => {
           )}
         </Card>
       </Container>
+      }
       <Dialog
         open={open}
         TransitionComponent={Transition}
@@ -608,6 +643,8 @@ const Oferta = () => {
       </Dialog>
 
       <Toaster richColors closeButton />
+      <Footer/>
+       
     </>
   );
 };

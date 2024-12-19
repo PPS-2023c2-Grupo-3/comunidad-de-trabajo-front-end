@@ -8,26 +8,20 @@ import {
   TextField,
   MenuItem,
   Typography,
-  Chip,
-  OutlinedInput,
-  Select,
-  FormControl,
+
 } from "@mui/material";
-
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-
 import * as yup from "yup";
-
-import { useState, useEffect, Fragment } from "react";
-
+import { useState, useEffect } from "react";
 import { getEstudios } from "../../../services/estudios_service";
-import { getCarreras } from "../../../services/carreras_service";
 import { getJornadas } from "../../../services/jornadas_service";
 import { getTiposContratos } from "../../../services/contratos_service";
 import { postOferta } from "../../../services/ofertas_service";
+import { getRubrosOfertas } from "../../../services/rubros_ofertas_service";
 import { Toaster, toast } from "sonner";
-import { getAptitudes } from "../../../services/aptitudes_service";
-import { getPreferencias } from "../../../services/preferencias_service";
+import LockIcon from "@mui/icons-material/Lock";
+import { EncryptStorage } from "encrypt-storage";
+import { useNavigate } from "react-router-dom";
 
 const modalidadDeTrabajo = [
   {
@@ -60,20 +54,23 @@ const niveles = [
 ];
 
 const CrearOferta = () => {
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+
   const token = sessionStorage.getItem("token");
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
   const idEmpresa = datosUsuario.id;
 
   const [validarErrores, setValidarErrores] = useState({}); // Para controlar los errores
   const [estudios, setEstudios] = useState([]);
-  const [carreras, setCarreras] = useState([]);
   const [jornadas, setJornadas] = useState([]);
   const [contratos, setContratos] = useState([]);
-  const [aptitudes, setAptitudes] = useState([]);
-  const [aptitudesElegidas, setAptitudesElegidas] = useState([]);
-  const [preferencias, setPreferencias] = useState([]);
-  const [preferenciasElegidas, setPreferenciasElegidas] = useState([]);
   const [idiomasElegidos, setIdiomasElegidos] = useState([]);
+  const [rubrosOfertas, setRubrosOfertas] = useState([]);
+  const navigate = useNavigate();
 
   const [oferta, setOferta] = useState({
     tituloOferta: "",
@@ -84,18 +81,18 @@ const CrearOferta = () => {
     edadDesde: null,
     edadHasta: null,
     experienciaPreviaDesc: "",
+    idRubroOferta: null,
     zonaTrabajo: "",
     areasEstudio: "",
     otrosDetalles: "",
     beneficios: "",
     remuneracion: null,
     idEstudio: "",
-    idCarrera: "",
+    carrera: "",
     idJornada: "",
     idContrato: "",
     idEmpresa: idEmpresa,
     modalidadDeTrabajo: "",
-    tareasARealizar: "",
     idiomas: [
       {
         nombre_idioma: "",
@@ -118,11 +115,7 @@ const CrearOferta = () => {
   useEffect(() => {
     const fetchEstudios = async () => {
       const response = await getEstudios();
-      setEstudios(response.estudios);
-    };
-    const fetchCarreras = async () => {
-      const response = await getCarreras();
-      setCarreras(response.carreras);
+      setEstudios(response);
     };
     const fetchJornadas = async () => {
       const response = await getJornadas();
@@ -130,7 +123,7 @@ const CrearOferta = () => {
     };
     const fetchContratos = async () => {
       const response = await getTiposContratos();
-      setContratos(response.contratos);
+      setContratos(response);
     };
     const getAptitudesData = async () => {
       const response = await getAptitudes();
@@ -140,12 +133,15 @@ const CrearOferta = () => {
       const response = await getPreferencias();
       setPreferencias(response.preferencias);
     };
+    const fetchRubrosOfertasData = async () => {
+      const response = await getRubrosOfertas();
+      setRubrosOfertas(response);
+    };
+
     fetchEstudios();
-    fetchCarreras();
     fetchJornadas();
     fetchContratos();
-    getAptitudesData();
-    getPreferenciasData();
+    fetchRubrosOfertasData();
   }, []);
 
   const handleChangeAptitudes = (event) => {
@@ -231,7 +227,7 @@ const CrearOferta = () => {
           toast.success("Oferta creada con éxito");
           toast("A la brevedad será revisada por un administrador");
           setTimeout(() => {
-            window.location.reload();
+            navigate("/perfil?section=verOfertas");
           }, 3000);
         } else {
           toast.error("Error al crear la oferta");
@@ -293,17 +289,34 @@ const CrearOferta = () => {
       .integer("La remuneración debe ser un número entero")
       .nullable(),
     idEstudio: yup.string().required("El estudio es obligatorio"),
-    idCarrera: yup.string().required("La carrera es obligatoria"),
     idJornada: yup.string().required("La jornada es obligatoria"),
     idContrato: yup.string().required("El contrato es obligatorio"),
     modalidadDeTrabajo: yup.string().required("La modalidad es obligatoria"),
-    tareasARealizar: yup.string().required("Las tareas son obligatorias"),
+    
   });
 
   return (
     <Card type="section" elevation={8}>
       <CardHeader title="Datos de la oferta" />
-      <Stack spacing={6}>
+      {datosUsuario.Estado.id === 2 ? 
+      (
+        <>
+          <Box padding={2} sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2
+          }}>
+            <LockIcon fontSize="large" sx={{
+              color: "#f44336"
+            }} />
+            <Typography variant="h5" gutterBottom>
+              No puedes crear ofertas si tu cuenta no ha sido verificada. Por favor, contacta al administrador.
+            </Typography>
+          </Box>
+        </>
+      ) : <Stack spacing={6}>
         <Box>
           <Grid
             container
@@ -340,21 +353,7 @@ const CrearOferta = () => {
                 helperText={validarErrores.descripcion}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField
-                fullWidth
-                label="Fecha de vigencia"
-                InputLabelProps={{ shrink: true }}
-                type="date"
-                variant="outlined"
-                value={oferta.fechaVigencia || ""}
-                onChange={(e) => {
-                  setOferta({ ...oferta, fechaVigencia: e.target.value });
-                }}
-                error={Boolean(validarErrores.fechaVigencia)}
-                helperText={validarErrores.fechaVigencia}
-              />
-            </Grid>
+           
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 label="Horario laboral (desde)"
@@ -410,6 +409,22 @@ const CrearOferta = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
+                label="Fecha de vigencia"
+                InputLabelProps={{ shrink: true }}
+                type="date"
+                variant="outlined"
+                value={oferta.fechaVigencia || ""}
+                onChange={(e) => {
+                  setOferta({ ...oferta, fechaVigencia: e.target.value });
+                }}
+                error={Boolean(validarErrores.fechaVigencia)}
+                helperText={validarErrores.fechaVigencia}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField
+                fullWidth
+                multiline
                 label="Experiencia previa"
                 variant="outlined"
                 value={oferta.experienciaPreviaDesc || ""}
@@ -423,6 +438,30 @@ const CrearOferta = () => {
                 helperText={validarErrores.experienciaPreviaDesc}
               />
             </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField
+                fullWidth
+                label="Rubro"
+                variant="outlined"
+                select
+                value={oferta.idRubroOferta || ""}
+                onChange={(e) => {
+                  setOferta({
+                    ...oferta,
+                    idRubroOferta: e.target.value,
+                  });
+                }}
+                error={Boolean(validarErrores.idRubroOferta)}
+                helperText={validarErrores.idRubroOferta}
+              >
+                {rubrosOfertas.map((rubro) => (
+                  <MenuItem key={rubro.id} value={rubro.id}>
+                    {rubro.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
@@ -442,6 +481,7 @@ const CrearOferta = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
+                multiline
                 label="Area de estudio"
                 variant="outlined"
                 value={oferta.areasEstudio || ""}
@@ -458,7 +498,8 @@ const CrearOferta = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
-                label="Otros detalles"
+                multiline
+                label="Tareas a realizar"
                 variant="outlined"
                 value={oferta.otrosDetalles || ""}
                 onChange={(e) => {
@@ -474,6 +515,7 @@ const CrearOferta = () => {
             <Grid item xs={12} sm={6} md={6}>
               <TextField
                 fullWidth
+                multiline
                 label="Beneficios"
                 variant="outlined"
                 value={oferta.beneficios || ""}
@@ -521,33 +563,26 @@ const CrearOferta = () => {
               >
                 {estudios.map((estudio) => (
                   <MenuItem key={estudio.id} value={estudio.id}>
-                    {estudio.nombre_estudio_estado}
+                    {estudio.nombre_estudio} {estudio.estado_estudio}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
               <TextField
-                select
                 fullWidth
                 label="Carrera"
                 variant="outlined"
-                value={oferta.idCarrera || ""}
+                value={oferta.carrera || ""}
                 onChange={(e) => {
                   setOferta({
                     ...oferta,
-                    idCarrera: e.target.value,
+                    carrera: e.target.value,
                   });
                 }}
-                error={Boolean(validarErrores.idCarrera)}
-                helperText={validarErrores.idCarrera}
-              >
-                {carreras.map((carrera) => (
-                  <MenuItem key={carrera.id} value={carrera.id}>
-                    {carrera.nombre_carrera}
-                  </MenuItem>
-                ))}
-              </TextField>
+                error={Boolean(validarErrores.carrera)}
+                helperText={validarErrores.carrera}
+              />
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
               <TextField
@@ -618,24 +653,8 @@ const CrearOferta = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField
-                fullWidth
-                label="Tareas a realizar"
-                variant="outlined"
-                value={oferta.tareasARealizar || ""}
-                multiline
-                onChange={(e) => {
-                  setOferta({
-                    ...oferta,
-                    tareasARealizar: e.target.value,
-                  });
-                }}
-                error={Boolean(validarErrores.tareasARealizar)}
-                helperText={validarErrores.tareasARealizar}
-              />
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
+            
+            {/*<Grid item xs={12} sm={12} md={12}>
               <Typography variant="h5" gutterBottom>
                 Idiomas requeridos
               </Typography>
@@ -746,8 +765,8 @@ const CrearOferta = () => {
               >
                 Agregar nuevo idioma
               </Button>
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
+            </Grid>*/}
+            {/*<Grid item xs={12} sm={12} md={12}>
               <Typography variant="h5" gutterBottom>
                 Aptitudes
               </Typography>
@@ -797,8 +816,8 @@ const CrearOferta = () => {
                   </FormControl>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12} sm={12} md={12}>
+                      </Grid>*/}
+            {/*<Grid item xs={12} sm={12} md={12}>
               <Typography variant="h5" gutterBottom>
                 Preferencias
               </Typography>
@@ -848,7 +867,7 @@ const CrearOferta = () => {
                   </FormControl>
                 </Grid>
               </Grid>
-            </Grid>
+                      </Grid>*/}
 
             <Grid item xs={12} sm={12} md={12}>
               <Button
@@ -865,7 +884,7 @@ const CrearOferta = () => {
             </Grid>
           </Grid>
         </Box>
-      </Stack>
+      </Stack>}
       <Toaster richColors closeButton />
     </Card>
   );

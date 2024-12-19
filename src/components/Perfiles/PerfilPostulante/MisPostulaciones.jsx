@@ -27,15 +27,23 @@ import { Toaster, toast } from "sonner";
 import { forwardRef, useEffect, useState } from "react";
 import Buscador from "../../Buscador/Buscador";
 import Paginacion from "../../Paginacion/Paginacion";
+import { EncryptStorage } from "encrypt-storage";
+
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const MisPostulaciones = () => {
+
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+  
   const [ofertas, setOfertas] = useState([]);
   const [postulante, setPostulante] = useState([]);
-  const idUsuario = sessionStorage.getItem("idUsuario");
+  const idUsuario = encryptStorage.getItem("idUsuario");
   const token = sessionStorage.getItem("token");
   const [open, setOpen] = useState(false);
   const [idOfertaParaEliminar, setIdOfertaParaEliminar] = useState(null);
@@ -149,6 +157,12 @@ const MisPostulaciones = () => {
                 <Typography variant="h5">Empresa</Typography>
               </TableCell>
               <TableCell align="center" sx={{ width: "30%" }}>
+                <Typography variant="h5">Estado</Typography>
+              </TableCell>
+              <TableCell align="center" sx={{ width: "30%" }}>
+                <Typography variant="h5">CV Visto</Typography>
+              </TableCell>
+              <TableCell align="center" sx={{ width: "30%" }}>
                 <Typography variant="h5">Acciones</Typography>
               </TableCell>
             </TableRow>
@@ -170,14 +184,29 @@ const MisPostulaciones = () => {
                   </Typography>
                 </TableCell>
                 <TableCell align="center">
+                  <Typography variant="subtitle1">
+                    {
+                      oferta.Estado.nombre_estado === "pendiente" ? "Pendiente de revisión" :
+                      oferta.Estado.nombre_estado === "aceptado" ? "Aceptado" :
+                      oferta.Estado.nombre_estado === "en proceso" ? "En proceso de selección" :
+                      "Rechazado"
+                    }
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle1">
+                    {oferta.cv_visto ? "Sí" : "No"}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
                   <Button
                     variant="contained"
                     sx={{
                       margin: 1,
                       color: "white",
-                      backgroundColor: "green",
+                      backgroundColor: "#28a745",
                       "&:hover": {
-                        backgroundColor: "green",
+                        backgroundColor: "#28a745",
                         color: "white",
                       },
                     }}
@@ -185,7 +214,7 @@ const MisPostulaciones = () => {
                   >
                     Ver
                   </Button>
-                  <Button
+                  {/*<Button
                     variant="outlined"
                     sx={{
                       color: "red",
@@ -199,7 +228,7 @@ const MisPostulaciones = () => {
                     onClick={() => handleClickOpen(oferta.id)}
                   >
                     Eliminar
-                  </Button>
+                  </Button>*/}
                 </TableCell>
               </TableRow>
             ))}
@@ -229,12 +258,12 @@ const MisPostulaciones = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button
+          {<Button
             onClick={handleDeletePostulacion(idOfertaParaEliminar)}
             color="error"
           >
             Eliminar
-          </Button>
+          </Button>}
         </DialogActions>
       </Dialog>
       <Toaster richColors closeButton />

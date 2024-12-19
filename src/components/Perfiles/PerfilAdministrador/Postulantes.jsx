@@ -18,12 +18,14 @@ import { getPostulantes } from "../../../services/postulantes_service";
 import { useEffect, useState } from "react";
 import Buscador from "../../Buscador/Buscador";
 import Paginacion from "../../Paginacion/Paginacion";
-import FiltroAptitudes from "../../Filtros/FiltroAptitudes";
-import FiltroPreferencias from "../../Filtros/FiltroPreferencias";
-
+import { EncryptStorage } from 'encrypt-storage';
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 const Postulantes = () => {
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const limite = 6;
@@ -40,7 +42,7 @@ const Postulantes = () => {
 
   const almacenarPostulantes = async () => {
     const response = await getPostulantes(paginaActual - 1, 40, "id", "");
-    sessionStorage.setItem("postulantesTotales", JSON.stringify(response.postulantes.rows));
+    encryptStorage.setItem("postulantesTotales", (response.postulantes.rows));
   };
   useEffect(() => {
     almacenarPostulantes();
@@ -89,24 +91,7 @@ const Postulantes = () => {
           paddingY: 1,
         }}
       >
-        <Grid item xs={12} sm={6}>
-          <FiltroAptitudes 
-          postulantes={postulantes} 
-          setPostulantes={setPostulantes} 
-          traerPostulantes={traerPostulantes}
-          aptitud={aptitud}
-          setAptitud={setAptitud}
-          preferencia={preferencia} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FiltroPreferencias 
-            postulantes={postulantes} 
-            setPostulantes={setPostulantes} 
-            traerPostulantes={traerPostulantes} 
-            preferencia={preferencia} 
-            setPreferencia={setPreferencia} 
-            aptitud={aptitud}/>
-        </Grid>
+        
       </Grid>
 
       <TableContainer component={Paper}>
@@ -153,10 +138,10 @@ const Postulantes = () => {
                   <Typography variant="subtitle1">
                     <IconButton
                       href={postulante.cv}
-                      disabled={postulante.cv === null}
+                      disabled={!postulante.cv}
                       target="_blank"
                       sx={{
-                        color: "green",
+                        color: "#cb3234",
                         "&:hover": {
                           backgroundColor: "lightgrey",
                           color: "black",
@@ -172,12 +157,12 @@ const Postulantes = () => {
                     variant="outlined"
                     sx={{
                       margin: 1,
-                      color: "green",
-                      borderColor: "green",
+                      color: "#28a745",
+                      borderColor: "#28a745",
                       "&:hover": {
                         backgroundColor: "lightgrey",
                         color: "black",
-                        borderColor: "green",
+                        borderColor: "#28a745",
                       },
                     }}
                     href={`/postulante/${postulante.id}`}

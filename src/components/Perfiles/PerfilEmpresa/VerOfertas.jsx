@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   CardHeader,
   Typography,
@@ -23,7 +24,7 @@ import {
 } from "@mui/material";
 
 import CircleIcon from "@mui/icons-material/Circle";
-
+import LockIcon from "@mui/icons-material/Lock";
 import { forwardRef, useEffect, useState } from "react";
 
 import { getOfertaByCuit, putOferta } from "../../../services/ofertas_service";
@@ -31,13 +32,17 @@ import { getOfertaByCuit, putOferta } from "../../../services/ofertas_service";
 import { Toaster, toast } from "sonner";
 import Buscador from "../../Buscador/Buscador";
 import Paginacion from "../../Paginacion/Paginacion";
-
+import { EncryptStorage } from "encrypt-storage";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const VerOfertas = () => {
-  const datosUsuario = JSON.parse(sessionStorage.getItem("datosUsuario"));
+  const encryptStorage = new EncryptStorage(import.meta.env.VITE_SECRET, {
+    doNotParseValues: false,
+    storageType: "sessionStorage",
+  });
+  const datosUsuario = encryptStorage.getItem("datosUsuario");
   const token = sessionStorage.getItem("token");
 
   const [paginaActual, setPaginaActual] = useState(1);
@@ -78,7 +83,7 @@ const VerOfertas = () => {
     try {
       const response = await putOferta(
         idOferta,
-        { estado: "Finalizada", cierre: motivo, check: motivoCheck },
+        { idEstado:5, cierre: motivo, check: motivoCheck },
         token
       );
       if (response === "OK") {
@@ -145,7 +150,26 @@ const VerOfertas = () => {
           },
         }}
       />
-      <TableContainer component={Paper}>
+
+      {datosUsuario.Estado.id === 2 ? 
+      (
+        <>
+          <Box padding={2} sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2
+          }}>
+            <LockIcon fontSize="large" sx={{
+              color: "#f44336"
+            }} />
+            <Typography variant="h5" gutterBottom>
+              No puedes ver ofertas si tu cuenta no ha sido verificada. Por favor, contacta al administrador.
+            </Typography>
+          </Box>
+        </>
+      ) :<TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
@@ -185,16 +209,16 @@ const VerOfertas = () => {
                       sx={{
                         verticalAlign: "middle",
                         color:
-                          oferta.estado === "Activa"
-                            ? "green"
-                            : oferta.estado === "Observada"
+                          oferta.Estado.nombre_estado === "activa"
+                            ? "#28a745"
+                            : oferta.Estado.nombre_estado === "observada"
                             ? "red"
-                            : oferta.estado === "Pendiente"
+                            : oferta.Estado.nombre_estado === "pendiente"
                             ? "orange"
                             : "black",
                       }}
                     />
-                    {oferta.estado[0].toUpperCase() + oferta.estado.slice(1)}
+                    {oferta.Estado.nombre_estado}
                   </Typography>
                 </TableCell>
                 <TableCell align="center">
@@ -202,9 +226,9 @@ const VerOfertas = () => {
                     variant="contained"
                     sx={{
                       color: "white",
-                      backgroundColor: "green",
+                      backgroundColor: "#28a745",
                       "&:hover": {
-                        backgroundColor: "green",
+                        backgroundColor: "#28a745",
                         color: "white",
                       },
                     }}
@@ -216,14 +240,15 @@ const VerOfertas = () => {
                     variant="outlined"
                     sx={{
                       margin: 1,
-                      color: "green",
-                      borderColor: "green",
+                      color: "#28a745",
+                      borderColor: "#28a745",
                       "&:hover": {
                         backgroundColor: "lightgrey",
                         color: "black",
-                        borderColor: "green",
+                        borderColor: "#28a745",
                       },
                     }}
+                    disabled={oferta.Estado.nombre_estado === "pendiente" || oferta.Estado.nombre_estado === "observada"}
                     href={`/postulantes/${oferta.id}`}
                   >
                     Ver postulantes
@@ -254,7 +279,7 @@ const VerOfertas = () => {
           totalPaginas={totalPaginas}
           cambiarPagina={setPaginaActual}
         />
-      </TableContainer>
+      </TableContainer>}
       <Dialog
         open={open}
         TransitionComponent={Transition}
